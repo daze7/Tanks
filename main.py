@@ -1,10 +1,14 @@
 import pygame
 import sys
 import os
+import PySimpleGUI as sg
+#from tkinter import *
 
 pygame.init()
 size = width, height = 800, 800
 screen = pygame.display.set_mode(size)
+fps = 60
+current_volume = 1
 
 
 def terminate():
@@ -52,8 +56,8 @@ def main_menu():
     start_btn = Button(290, 70)
     settings_btn = Button(255, 70)
     quit_btn = Button(160, 70)
-    main_menu_background = pygame.image.load("data/main_menu_background.png")
     show = True
+    main_menu_background = pygame.image.load("data/main_menu_background.png")
     while show:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -68,11 +72,25 @@ def main_menu():
 
 
 def start_game():
+    pygame.mixer.music.fadeout(2000)
     pass
 
 
 def options_menu():
-    pass
+    options_menu_background = pygame.image.load("data/options_menu_background.png")
+    show = True
+    back_btn = Button(170, 70)
+    while show:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        screen.blit(options_menu_background, (0, 0))
+        back_btn.draw(50, 600, 'В меню', main_menu)
+        pygame.display.update()
 
+pygame.mixer.music.load('data/main_menu_music.wav')
+pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(0.4)
 
 main_menu()
