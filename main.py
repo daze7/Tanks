@@ -1,7 +1,6 @@
 import pygame
 import sys
 import os
-import PySimpleGUI as sg
 #from tkinter import *
 
 pygame.init()
