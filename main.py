@@ -1,7 +1,9 @@
 import pygame
 import sys
 import os
-#from tkinter import *
+import tkinter as tk
+from tkinter import *
+from tkinter import ttk
 
 pygame.init()
 size = width, height = 800, 800
@@ -9,6 +11,8 @@ screen = pygame.display.set_mode(size)
 fps = 60
 current_volume = 1
 
+def except_hook(cls, exception, traceback):
+    sys.__excepthook__(cls, exception, traceback)
 
 def terminate():
     pygame.quit()
@@ -68,17 +72,24 @@ def main_menu():
         settings_btn.draw(50, 400, 'Настройки', options_menu)
         quit_btn.draw(50, 500, 'Выход', terminate)
         pygame.display.update()
+        print('still_here')
 
 
 def start_game():
     pygame.mixer.music.fadeout(2000)
-    pass
-
+    raise IndexError("index out of range")
+    #pass
 
 def options_menu():
     options_menu_background = pygame.image.load("data/options_menu_background.png")
     show = True
     back_btn = Button(170, 70)
+    slider1 = 500
+    slider2 = 500
+    slider3 = 500
+    slider_rect1 = pygame.Rect(500, 115, 210, 20)
+    slider_rect2 = pygame.Rect(500, 215, 210, 20)
+    slider_rect3 = pygame.Rect(500, 315, 210, 20)
     while show:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -86,6 +97,46 @@ def options_menu():
                 quit()
         screen.blit(options_menu_background, (0, 0))
         back_btn.draw(50, 600, 'В меню', main_menu)
+        print_text('Общая громкость', 50, 100, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
+        print_text('Громкость звуков', 50, 200, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
+        print_text('Громкость музыки', 50, 300, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
+
+
+
+        mouse_pos = pygame.mouse.get_pos()
+
+        if slider_rect1.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] != 0:
+            # collision detection also needed here
+            slider1 = pygame.mouse.get_pos()[0] - 10
+            if slider1 < 500:
+                slider1 = 500
+            if slider1 > 700:
+                slider1 = 700
+
+        if slider_rect2.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] != 0:
+            # collision detection also needed here
+            slider2 = pygame.mouse.get_pos()[0] - 10
+            if slider2 < 500:
+                slider2 = 500
+            if slider2 > 700:
+                slider2 = 700
+
+        if slider_rect3.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] != 0:
+            # collision detection also needed here
+            slider3 = pygame.mouse.get_pos()[0] - 10
+            if slider3 < 500:
+                slider3 = 500
+            if slider3 > 700:
+                slider3 = 700
+
+        pygame.draw.rect(screen, 'White', slider_rect1)
+        pygame.draw.rect(screen, 'RED', pygame.Rect(slider1, 115, 20, 20))
+
+        pygame.draw.rect(screen, 'WHITE', slider_rect2)
+        pygame.draw.rect(screen, 'RED', pygame.Rect(slider2, 215, 20, 20))
+
+        pygame.draw.rect(screen, 'WHITE', slider_rect3)
+        pygame.draw.rect(screen, 'RED', pygame.Rect(slider3, 315, 20, 20))
         pygame.display.update()
 
 pygame.mixer.music.load('data/main_menu_music.wav')
