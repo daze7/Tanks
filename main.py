@@ -10,6 +10,9 @@ size = width, height = 800, 800
 screen = pygame.display.set_mode(size)
 fps = 60
 current_volume = 1
+show_main_menu = False
+show_optoins_menu = False
+show_game = False
 
 def except_hook(cls, exception, traceback):
     sys.__excepthook__(cls, exception, traceback)
@@ -36,6 +39,7 @@ def print_text(message, x, y, font_color=(255, 255, 255), font_type='data/EE-Bel
 
 
 class Button(pygame.sprite.Sprite):
+    global show_main_menu
     def __init__(self, w, h):
         self.w = w
         self.h = h
@@ -49,6 +53,7 @@ class Button(pygame.sprite.Sprite):
             pygame.draw.rect(screen, self.active_color, (x, y, self.w, self.h))
             if click[0] == 1:
                 if action is not None:
+                    show_main_menu = False
                     action()
         else:
             pygame.draw.rect(screen, self.inactive_color, (x, y, self.w, self.h))
@@ -56,12 +61,13 @@ class Button(pygame.sprite.Sprite):
 
 
 def main_menu():
+    global show_main_menu
     start_btn = Button(290, 70)
     settings_btn = Button(255, 70)
     quit_btn = Button(160, 70)
-    show = True
+    show_main_menu = True
     main_menu_background = pygame.image.load("data/main_menu_background.png")
-    while show:
+    while show_main_menu:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -72,25 +78,39 @@ def main_menu():
         settings_btn.draw(50, 400, 'Настройки', options_menu)
         quit_btn.draw(50, 500, 'Выход', terminate)
         pygame.display.update()
-        print('still_here')
 
 
 def start_game():
     pygame.mixer.music.fadeout(2000)
-    raise IndexError("index out of range")
+
     #pass
+def check_sounds():
+    global show_optoins_menu
+    global master_volume
+    global sounds_volume
+    global music_volume
+    f = open('data/config.txt')
+    master_volume = float(f.readline().split('=')[1])
+    sounds_volume = float(f.readline().split('=')[1])
+    music_volume = float(f.readline().split('=')[1])
+    f.close()
 
 def options_menu():
+    global show_optoins_menu
+    global master_volume
+    global sounds_volume
+    global music_volume
+    show_optoins_menu = True
     options_menu_background = pygame.image.load("data/options_menu_background.png")
     show = True
     back_btn = Button(170, 70)
-    slider1 = 500
-    slider2 = 500
-    slider3 = 500
+    slider1 = 500 + (200 * master_volume)
+    slider2 = 500 + (200 * sounds_volume)
+    slider3 = 500 + (200 * music_volume)
     slider_rect1 = pygame.Rect(500, 115, 210, 20)
     slider_rect2 = pygame.Rect(500, 215, 210, 20)
     slider_rect3 = pygame.Rect(500, 315, 210, 20)
-    while show:
+    while show_optoins_menu:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -112,6 +132,14 @@ def options_menu():
                 slider1 = 500
             if slider1 > 700:
                 slider1 = 700
+            f = open('data/config.txt', 'w')
+            value = (slider1 - 500) / 200
+            master_volume = value
+            f.write('master_volume=' + str(value) + '\n')
+            f.write('sounds_volume=' + str(sounds_volume) + '\n')
+            f.write('music_volume=' + str(music_volume) + '\n')
+            f.close()
+            pygame.mixer.music.set_volume(master_volume * music_volume)
 
         if slider_rect2.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] != 0:
             # collision detection also needed here
@@ -120,6 +148,13 @@ def options_menu():
                 slider2 = 500
             if slider2 > 700:
                 slider2 = 700
+            f = open('data/config.txt', 'w')
+            value = (slider2 - 500) / 200
+            sounds_volume = value
+            f.write('master_volume=' + str(master_volume) + '\n')
+            f.write('sounds_volume=' + str(value) + '\n')
+            f.write('music_volume=' + str(music_volume) + '\n')
+            f.close()
 
         if slider_rect3.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] != 0:
             # collision detection also needed here
@@ -128,6 +163,14 @@ def options_menu():
                 slider3 = 500
             if slider3 > 700:
                 slider3 = 700
+            f = open('data/config.txt', 'w')
+            value = (slider3 - 500) / 200
+            music_volume = value
+            f.write('master_volume=' + str(master_volume) + '\n')
+            f.write('sounds_volume=' + str(sounds_volume) + '\n')
+            f.write('music_volume=' + str(value) + '\n')
+            f.close()
+            pygame.mixer.music.set_volume(master_volume * music_volume)
 
         pygame.draw.rect(screen, 'White', slider_rect1)
         pygame.draw.rect(screen, 'RED', pygame.Rect(slider1, 115, 20, 20))
@@ -139,8 +182,10 @@ def options_menu():
         pygame.draw.rect(screen, 'RED', pygame.Rect(slider3, 315, 20, 20))
         pygame.display.update()
 
+check_sounds()
 pygame.mixer.music.load('data/main_menu_music.wav')
 pygame.mixer.music.play(-1)
-pygame.mixer.music.set_volume(0.4)
+pygame.mixer.music.set_volume(master_volume * music_volume)
+print(master_volume, music_volume)
 
 main_menu()
