@@ -8,7 +8,8 @@ from tkinter import ttk
 pygame.init()
 size = width, height = 800, 800
 screen = pygame.display.set_mode(size)
-fps = 60
+FPS = 60
+clock = pygame.time.Clock()
 current_volume = 1
 show_main_menu = False
 show_optoins_menu = False
@@ -79,10 +80,114 @@ def main_menu():
         quit_btn.draw(50, 500, 'Выход', terminate)
         pygame.display.update()
 
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(tiles_group, all_sprites)
+        self.image = tile_images[tile_type]
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x, tile_height * pos_y)
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(player_group, all_sprites)
+        self.x, self.y = pos_x, pos_y
+        print(self.x * 50, self.y * 50)
+        self.image = player_image
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x, tile_height * pos_y)
+
+    def update(self, pos_x, pos_y):
+        print(self.x, self.y)
+        x = (self.x + pos_x) // 50
+        y = (self.y + pos_y) // 50
+        if self.x + pos_x >= 0 and self.x + pos_x <= 450 and self.y + pos_y >= 0 and self.y + pos_y <= 450 and lev[x][y] != '#':
+            self.x += pos_x
+            self.y += pos_y
+            self.image = player_image
+            self.rect = self.image.get_rect().move(self.x, self.y)
+
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(player_group, all_sprites)
+        self.image = enemy_image
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x, tile_height * pos_y)
+
+
+player = None
+
+# группы спрайтов
+all_sprites = pygame.sprite.Group()
+tiles_group = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+enemy_group = pygame.sprite.Group()
+tile_images = {
+    'wall': load_image('texture/map/Tilemap/wall1.png'),
+    'empty': load_image('texture/map/Tilemap/sand1.png')
+}
+player_image = load_image('texture/tanks/player.png')
+enemy_image = load_image('texture/tanks/Enemy.png')
+tile_width = tile_height = 50
+
+def load_level(filename):
+    filename = "data/" + filename
+    # читаем уровень, убирая символы перевода строки
+    with open(filename, 'r') as mapFile:
+        level_map = [line.strip() for line in mapFile]
+
+    # и подсчитываем максимальную длину
+    max_width = max(map(len, level_map))
+
+    # дополняем каждую строку пустыми клетками ('.')
+    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+
+
+def generate_level(level):
+    new_player, x, y = None, None, None
+    for y in range(len(level)):
+        for x in range(len(level[y])):
+            if level[y][x] == '.':
+                Tile('empty', x, y)
+            elif level[y][x] == '#':
+                Tile('wall', x, y)
+            elif level[y][x] == '@':
+                Tile('empty', x, y)
+                new_player = Player(x, y)
+            elif level[y][x] == '!':
+                Tile('empty', x, y)
+                new_enemy = Enemy(x, y)
+
+    # вернем игрока, а также размер поля в клетках
+    return new_player, x, y
+lev = load_level('map/1.txt')
 
 def start_game():
     pygame.mixer.music.fadeout(2000)
-
+    show_game = True
+    pygame.init()
+    size = width, height = 500, 500
+    screen = pygame.display.set_mode(size)
+    player, level_x, level_y = generate_level(load_level('map/1.txt'))
+    screen.fill((250, 250, 250))
+    while show_game:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    player.update(0, -5)
+                if event.key == pygame.K_DOWN:
+                    player.update(0, 5)
+                if event.key == pygame.K_RIGHT:
+                    player.update(5, 0)
+                if event.key == pygame.K_LEFT:
+                    player.update(-5, 0)
+        screen.fill((0, 0, 0))
+        all_sprites.draw(screen)
+        pygame.display.flip()
+        clock.tick(FPS)
     #pass
 def check_sounds():
     global show_optoins_menu
