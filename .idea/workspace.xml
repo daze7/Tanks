@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
+<<<<<<< HEAD
     <list default="true" id="60d7796d-30a4-43c9-b0a0-6ba11075aefb" name="Changes" comment=".">
       <change afterPath="$PROJECT_DIR$/data/map/1.txt" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/data/texture/map/Tilemap/sand1.png" afterDir="false" />
@@ -722,6 +723,9 @@
       <change beforePath="$PROJECT_DIR$/texture/tanks/TXT/license.txt" beforeDir="false" afterPath="$PROJECT_DIR$/data/texture/tanks/TXT/license.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/texture/tanks/TXT/readme.txt" beforeDir="false" afterPath="$PROJECT_DIR$/data/texture/tanks/TXT/readme.txt" afterDir="false" />
     </list>
+=======
+    <list default="true" id="60d7796d-30a4-43c9-b0a0-6ba11075aefb" name="Changes" comment="" />
+>>>>>>> origin/main
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -739,6 +743,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+<<<<<<< HEAD
     <property name="last_opened_file_path" value="$PROJECT_DIR$/data/texture/map/Tilemap" />
     <property name="settings.editor.selected.configurable" value="preferences.customizations" />
   </component>
@@ -773,6 +778,8 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+=======
+>>>>>>> origin/main
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -804,7 +811,11 @@
                   <entry key="branch">
                     <value>
                       <list>
+<<<<<<< HEAD
                         <option value="main" />
+=======
+                        <option value="origin/Chernousov/main" />
+>>>>>>> origin/main
                       </list>
                     </value>
                   </entry>
