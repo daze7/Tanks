@@ -18,6 +18,7 @@ show_game = False
 def except_hook(cls, exception, traceback):
     sys.__excepthook__(cls, exception, traceback)
 
+
 def terminate():
     pygame.quit()
     sys.exit()
@@ -37,6 +38,20 @@ def print_text(message, x, y, font_color=(255, 255, 255), font_type='data/EE-Bel
     font_type = pygame.font.Font(font_type, font_size)
     text = font_type.render(message, True, font_color)
     screen.blit(text, (x, y))
+
+
+# группы спрайтов
+all_sprites = pygame.sprite.Group()
+wall_group = pygame.sprite.Group()
+tiles_group = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+enemy_group = pygame.sprite.Group()
+
+wall_images = load_image('texture/map/Tilemap/wall1.png')
+tile_images = load_image('texture/map/Tilemap/sand1.png')
+player_image = load_image('texture/tanks/player.png')
+enemy_image = load_image('texture/tanks/Enemy.png')
+tile_width = tile_height = 50
 
 
 class Button(pygame.sprite.Sprite):
@@ -80,55 +95,62 @@ def main_menu():
         quit_btn.draw(50, 500, 'Выход', terminate)
         pygame.display.update()
 
+
 class Tile(pygame.sprite.Sprite):
-    def __init__(self, tile_type, pos_x, pos_y):
+    def __init__(self, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
-        self.image = tile_images[tile_type]
-        self.rect = self.image.get_rect().move(
-            tile_width * pos_x, tile_height * pos_y)
+        self.image = tile_images
+        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+
+
+class Wall(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(wall_group, all_sprites)
+        self.image = wall_images
+        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
-        self.x, self.y = pos_x, pos_y
-        print(self.x * 50, self.y * 50)
+        self.x, self.y = pos_x * 50, pos_y * 50
         self.image = player_image
-        self.rect = self.image.get_rect().move(
-            tile_width * pos_x, tile_height * pos_y)
+        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
     def update(self, pos_x, pos_y):
         print(self.x, self.y)
         x = (self.x + pos_x) // 50
         y = (self.y + pos_y) // 50
-        if self.x + pos_x >= 0 and self.x + pos_x <= 450 and self.y + pos_y >= 0 and self.y + pos_y <= 450 and lev[x][y] != '#':
-            self.x += pos_x
-            self.y += pos_y
-            self.image = player_image
-            self.rect = self.image.get_rect().move(self.x, self.y)
+        self.x += pos_x
+        self.y += pos_y
+        self.image = player_image
+        self.rect = self.image.get_rect().move(self.x, self.y)
+        if pygame.sprite.groupcollide(player_group, wall_group, False, False) or self.x > 450 or self.y > 450 or \
+                self.y < 0 or self.x < 0 or pygame.sprite.groupcollide(player_group, enemy_group, False, False):
+            self.x -= pos_x
+            self.y -= pos_y
+        self.image = player_image
+        if pos_x == 0 and pos_y > 0:
+            self.image = pygame.transform.rotate(player_image, 180)
+        if pos_x > 0 and pos_y == 0:
+            self.image = pygame.transform.rotate(player_image, 270)
+        if pos_x < 0 and pos_y == 0:
+            self.image = pygame.transform.rotate(player_image, 90)
+        self.rect = self.image.get_rect().move(self.x, self.y)
+
 
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
-        super().__init__(player_group, all_sprites)
+        super().__init__(enemy_group, all_sprites)
         self.image = enemy_image
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
 
 
-player = None
 
-# группы спрайтов
-all_sprites = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
-enemy_group = pygame.sprite.Group()
-tile_images = {
-    'wall': load_image('texture/map/Tilemap/wall1.png'),
-    'empty': load_image('texture/map/Tilemap/sand1.png')
-}
-player_image = load_image('texture/tanks/player.png')
-enemy_image = load_image('texture/tanks/Enemy.png')
-tile_width = tile_height = 50
+
+
 
 def load_level(filename):
     filename = "data/" + filename
@@ -148,14 +170,16 @@ def generate_level(level):
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
-                Tile('empty', x, y)
+                Tile(x, y)
             elif level[y][x] == '#':
-                Tile('wall', x, y)
+                print('roofi')
+                Wall(x, y)
             elif level[y][x] == '@':
-                Tile('empty', x, y)
+                Tile(x, y)
                 new_player = Player(x, y)
+                print(x, y)
             elif level[y][x] == '!':
-                Tile('empty', x, y)
+                Tile(x, y)
                 new_enemy = Enemy(x, y)
 
     # вернем игрока, а также размер поля в клетках
@@ -163,6 +187,10 @@ def generate_level(level):
 lev = load_level('map/1.txt')
 
 def start_game():
+    move_left = False
+    move_right = False
+    move_up = False
+    move_down = False
     pygame.mixer.music.fadeout(2000)
     show_game = True
     pygame.init()
@@ -176,18 +204,51 @@ def start_game():
                 pygame.quit()
                 quit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    player.update(0, -5)
-                if event.key == pygame.K_DOWN:
-                    player.update(0, 5)
-                if event.key == pygame.K_RIGHT:
-                    player.update(5, 0)
-                if event.key == pygame.K_LEFT:
-                    player.update(-5, 0)
+                if event.key == pygame.K_w:
+                    move_up = True
+                    move_down = False
+                    move_right = False
+                    move_left = False
+                if event.key == pygame.K_s:
+                    move_up = False
+                    move_down = True
+                    move_right = False
+                    move_left = False
+                if event.key == pygame.K_d:
+                    move_up = False
+                    move_down = False
+                    move_right = True
+                    move_left = False
+                if event.key == pygame.K_a:
+                    move_up = False
+                    move_down = False
+                    move_right = False
+                    move_left = True
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_w:
+                    move_up = False
+                if event.key == pygame.K_s:
+                    move_down = False
+                if event.key == pygame.K_d:
+                    move_right = False
+                if event.key == pygame.K_a:
+                    move_left = False
+        if move_right:
+            player.update(2, 0)
+        if move_left:
+            player.update(-2, 0)
+        if move_up:
+            player.update(0, -2)
+        if move_down:
+            player.update(0, 2)
         screen.fill((0, 0, 0))
-        all_sprites.draw(screen)
+        tiles_group.draw(screen)
+        wall_group.draw(screen)
+        player_group.draw(screen)
+        enemy_group.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
+        #pygame.event.pump()
     #pass
 def check_sounds():
     global show_optoins_menu
@@ -225,11 +286,7 @@ def options_menu():
         print_text('Общая громкость', 50, 100, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
         print_text('Громкость звуков', 50, 200, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
         print_text('Громкость музыки', 50, 300, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
-
-
-
         mouse_pos = pygame.mouse.get_pos()
-
         if slider_rect1.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] != 0:
             # collision detection also needed here
             slider1 = pygame.mouse.get_pos()[0] - 10
@@ -245,7 +302,6 @@ def options_menu():
             f.write('music_volume=' + str(music_volume) + '\n')
             f.close()
             pygame.mixer.music.set_volume(master_volume * music_volume)
-
         if slider_rect2.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] != 0:
             # collision detection also needed here
             slider2 = pygame.mouse.get_pos()[0] - 10
@@ -260,7 +316,6 @@ def options_menu():
             f.write('sounds_volume=' + str(value) + '\n')
             f.write('music_volume=' + str(music_volume) + '\n')
             f.close()
-
         if slider_rect3.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] != 0:
             # collision detection also needed here
             slider3 = pygame.mouse.get_pos()[0] - 10
@@ -276,21 +331,19 @@ def options_menu():
             f.write('music_volume=' + str(value) + '\n')
             f.close()
             pygame.mixer.music.set_volume(master_volume * music_volume)
-
         pygame.draw.rect(screen, 'White', slider_rect1)
         pygame.draw.rect(screen, 'RED', pygame.Rect(slider1, 115, 20, 20))
-
         pygame.draw.rect(screen, 'WHITE', slider_rect2)
         pygame.draw.rect(screen, 'RED', pygame.Rect(slider2, 215, 20, 20))
-
         pygame.draw.rect(screen, 'WHITE', slider_rect3)
         pygame.draw.rect(screen, 'RED', pygame.Rect(slider3, 315, 20, 20))
         pygame.display.update()
 
+#game_start
 check_sounds()
 pygame.mixer.music.load('data/main_menu_music.wav')
 pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(master_volume * music_volume)
-print(master_volume, music_volume)
+#print(master_volume, music_volume)
 
 main_menu()
