@@ -23,7 +23,7 @@ class Authorization(QWidget):
         self.name = ''
         self.Flag1 = False
         self.Flag2 = False
-        f = open('status_start_game.txt', 'w')
+        f = open('data/status_start_game.txt', 'w')
         f.write('False')
         f.close()
 
@@ -39,7 +39,7 @@ class Authorization(QWidget):
     def closed(self):  # если условие верно то
         # закрываем окно авторизации
         if self.Flag1 is True and self.Flag2 is True:
-            f = open('status_start_game.txt', 'w')
+            f = open('data/status_start_game.txt', 'w')
             f.write('True')
             f.close()
             QApplication.quit()

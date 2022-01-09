@@ -395,11 +395,11 @@ pygame.mixer.music.set_volume(master_volume * music_volume)
 #print(master_volume, music_volume)
 
 autorization.main()
-f = open('status_start_game.txt', 'r')
+f = open('data/status_start_game.txt', 'r')
 a = f.readline()
 f.close()
 if a == 'True':
-    f = open('status_start_game.txt', 'w')
+    f = open('data/status_start_game.txt', 'w')
     f.write('False')
     f.close()
     main_menu()
