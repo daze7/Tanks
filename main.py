@@ -7,7 +7,7 @@ from tkinter import ttk
 import autorization
 
 pygame.init()
-size = width, height = 800, 800
+size = width, height = 800, 700
 screen = pygame.display.set_mode(size)
 FPS = 60
 clock = pygame.time.Clock()
@@ -231,6 +231,9 @@ def generate_level(level):
 lev = load_level('map/1.txt')
 
 def start_game():
+    fair_player = pygame.mixer.Sound("data/fair-player.wav")
+    check_sounds()
+    fair_player.set_volume(master_volume * music_volume)
     move_left = False
     move_right = False
     move_up = False
@@ -250,6 +253,7 @@ def start_game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     player.shoot()
+                    fair_player.play()
                 if event.key == pygame.K_w or event.key == pygame.K_UP:
                     move_up = True
                     move_down = False
