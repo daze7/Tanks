@@ -4,6 +4,7 @@ import os
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
+import autorization
 
 pygame.init()
 size = width, height = 800, 800
@@ -393,4 +394,14 @@ pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(master_volume * music_volume)
 #print(master_volume, music_volume)
 
-main_menu()
+autorization.main()
+f = open('status_start_game.txt', 'r')
+a = f.readline()
+f.close()
+if a == 'True':
+    f = open('status_start_game.txt', 'w')
+    f.write('False')
+    f.close()
+    main_menu()
+else:
+    terminate()

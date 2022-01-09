@@ -90,4 +90,4 @@ class Authorization(QWidget):
         cur.close()
         con.close()
 
-main()
+# main()
