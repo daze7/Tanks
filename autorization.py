@@ -23,6 +23,9 @@ class Authorization(QWidget):
         self.name = ''
         self.Flag1 = False
         self.Flag2 = False
+        f = open('status_start_game.txt', 'w')
+        f.write('False')
+        f.close()
 
     def run(self):  # получаем сигнал от кнопок
         # поверяем что пользователь ввёл данные
@@ -36,6 +39,9 @@ class Authorization(QWidget):
     def closed(self):  # если условие верно то
         # закрываем окно авторизации
         if self.Flag1 is True and self.Flag2 is True:
+            f = open('status_start_game.txt', 'w')
+            f.write('True')
+            f.close()
             QApplication.quit()
 
     def signal_handler(self, value):  # выводим на экран нужные оповещения
