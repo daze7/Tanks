@@ -83,7 +83,7 @@ class Authorization(QWidget):
         if value != []:
             self.signal_handler('Такой ник уже используется')
         else:
-            cur.execute(f"INSERT INTO user(login,password) VALUES ('{log}', '{pas}')")
+            cur.execute(f"INSERT INTO user(login,password,score) VALUES ('{log}', '{pas}', 0)")
             self.signal_handler('Вы успешно зарегистрированны!')
             self.name = log
             con.commit()
