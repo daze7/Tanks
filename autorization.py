@@ -34,20 +34,8 @@ class Authorization(QWidget):
                 self.reg()
 
     def closed(self):  # если условие верно то
-        # в файл "status.txt" записываем записываем значение
         # закрываем окно авторизации
         if self.Flag1 is True and self.Flag2 is True:
-            name = self.name
-            con = sqlite3.connect("database/users.db")
-            cur = con.cursor()
-            cur.execute(f"SELECT u.status FROM user AS u WHERE u.login = '{name}'")
-            value = cur.fetchall()
-            value = ''.join(value[0])
-            f = open('status.txt', 'w')
-            f.write(value)
-            f.close()
-            cur.close()
-            con.close()
             QApplication.quit()
 
     def signal_handler(self, value):  # выводим на экран нужные оповещения
@@ -67,7 +55,7 @@ class Authorization(QWidget):
 
     def login(self, login, password):  # ищем пользователя в системе
         # если находим то разрешаем вход иначе не разрешаем
-        con = sqlite3.connect("database/users.db")
+        con = sqlite3.connect("data/database/users.db")
         cur = con.cursor()
         cur.execute(f'SELECT * FROM user WHERE login="{login}";')
         value = cur.fetchall()
@@ -82,18 +70,18 @@ class Authorization(QWidget):
             self.signal_handler('Проверте правильность ввода данных')
 
     def register(self, log, pas):  # регистрируем пользователя в системе
-        con = sqlite3.connect("database/users.db")
+        con = sqlite3.connect("data/database/users.db")
         cur = con.cursor()
         cur.execute(f'SELECT * FROM user WHERE login="{log}";')
         value = cur.fetchall()
         if value != []:
             self.signal_handler('Такой ник уже используется')
         else:
-            cur.execute(f"INSERT INTO user(login,password,status) VALUES ('{log}', '{pas}', 'user')")
+            cur.execute(f"INSERT INTO user(login,password) VALUES ('{log}', '{pas}')")
             self.signal_handler('Вы успешно зарегистрированны!')
             self.name = log
             con.commit()
         cur.close()
         con.close()
 
-# main()
+main()
