@@ -19,6 +19,11 @@ current_volume = 1
 show_main_menu = False
 show_optoins_menu = False
 show_game = False
+autorization_complete = False
+cheak_login = False
+reg_complete = False
+reg_error = False
+cheak = False
 login_user = ''
 COLOR_INACTIVE = pygame.Color('white')
 COLOR_ACTIVE = pygame.Color('green')
@@ -90,7 +95,7 @@ class Button(pygame.sprite.Sprite):
 
 
 def sign_in():
-    global play
+    global play, autorization_complete, cheak_login, cheak
     f = open('data/user_login.txt', 'r')
     a = f.readline()
     f.close()
@@ -102,14 +107,19 @@ def sign_in():
         cur.close()
         con.close()
         if value != []:
-            print_text('Успешная авторизация!', 450, 200, font_size=25)
+            #print_text('Успешная авторизация!', 450, 200, font_size=25)
+            cheak = True
+            autorization_complete = True
             play = True
 
         else:
-            print_text('Проверте правильность ввода данных', 350, 200, font_size=25)
+            #print_text('Проверте правильность ввода данных', 350, 200, font_size=25)
+            cheak = True
+            cheak_login = True
 
 
 def sign_up():
+    global reg_complete, reg_error, cheak
     f = open('data/user_login.txt', 'r')
     a = f.readline()
     f.close()
@@ -119,23 +129,28 @@ def sign_up():
         cur.execute(f'SELECT * FROM user WHERE login="{a}";')
         value = cur.fetchall()
         if value != []:
-            print_text('Такой ник уже используется', 420, 200, font_size=25)
+            #print_text('Такой ник уже используется', 420, 200, font_size=25)
+            cheak = True
+            reg_error = True
         else:
             cur.execute(f"INSERT INTO user(login,score) VALUES ('{a}', 0)")
             #print_text('Вы успешно зарегистрированны!', 420, 200, font_size=25)
+            cheak = True
+            reg_complete = True
             con.commit()
         cur.close()
         con.close()
 
 
 def main_menu():
-    global show_main_menu
+    global show_main_menu, autorization_complete, cheak_login, reg_complete, reg_error, cheak
     start_btn = Button(290, 70)
     settings_btn = Button(255, 70)
     quit_btn = Button(160, 70)
     input_box_login = InputBox(480, 400, 100, 30, 'Введите логин')
     sign_in_btn = Button(75, 40)
     sign_up_btn = Button(215, 45)
+    last = None
     show_main_menu = True
     show_authorization = True
     main_menu_background = pygame.image.load("data/main_menu_background.png")
@@ -154,6 +169,25 @@ def main_menu():
             f = open('data/user_login.txt', 'w')
             f.write(input_box_login.text)
             f.close()
+        if cheak:
+            if not last:
+                last = pygame.time.get_ticks()
+            now = pygame.time.get_ticks()
+            if autorization_complete is True and now - last <= 1500:
+                print_text('Успешная авторизация!', 450, 200, font_size=25)
+            elif cheak_login is True and now - last <= 1500:
+                print_text('Проверте правильность ввода данных', 350, 200, font_size=25)
+            elif reg_complete is True and now - last <= 1500:
+                print_text('Вы успешно зарегистрированны!', 420, 200, font_size=25)
+            elif reg_error is True and now - last <= 1500:
+                print_text('Такой ник уже используется', 420, 200, font_size=25)
+            else:
+                cheak = False
+                autorization_complete = False
+                cheak_login = False
+                reg_complete = False
+                reg_error = False
+                last = None
         print_text('Танчики', 50, 100, (255, 255, 255), 'data/EE-Bellflower.ttf', 100)
         if play:
             start_btn.draw(50, 300, 'Начать игру', start_game)
