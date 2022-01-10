@@ -233,7 +233,7 @@ lev = load_level('map/1.txt')
 def start_game():
     fair_player = pygame.mixer.Sound("data/fair-player.wav")
     check_sounds()
-    fair_player.set_volume(master_volume * music_volume)
+    fair_player.set_volume(master_volume * sounds_volume)
     move_left = False
     move_right = False
     move_up = False
