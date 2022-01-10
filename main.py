@@ -107,9 +107,14 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.bottom = y
         self.rect.centerx = x
         self.direction = direction
-        if self.direction == 'right' or self.direction == 'left':
+        if self.direction == 'right':
             self.rect.bottom += 30
             self.rect.centerx += 30
+        if self.direction == 'left':
+            self.rect.bottom += 30
+            self.rect.centerx -= 30
+        if self.direction == 'down':
+            self.rect.bottom += 60
         self.speedy = -10
 
     def update(self):
@@ -122,8 +127,10 @@ class Bullet(pygame.sprite.Sprite):
         if self.direction == 'left':
             self.rect.x += self.speedy
         # убить, если он заходит за верхнюю часть экрана
-        if self.rect.bottom < 0 or pygame.sprite.groupcollide(bullets_group, wall_group, True, False) or \
+        if pygame.sprite.groupcollide(bullets_group, wall_group, True, False) or \
                 pygame.sprite.groupcollide(bullets_group, enemy_group, True, True):
+            self.kill()
+        elif self.rect.bottom < 0 or self.rect.bottom > 500 or self.rect.x < 0 or self.rect.x > 500:
             self.kill()
 
 class Tile(pygame.sprite.Sprite):
@@ -297,6 +304,7 @@ def start_game():
         wall_group.draw(screen)
         player_group.draw(screen)
         enemy_group.draw(screen)
+        print(len(bullets_group))
         bullets_group.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
