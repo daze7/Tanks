@@ -24,6 +24,7 @@ cheak_login = False
 reg_complete = False
 reg_error = False
 cheak = False
+blok_game = False
 login_user = ''
 COLOR_INACTIVE = pygame.Color('white')
 COLOR_ACTIVE = pygame.Color('green')
@@ -141,13 +142,18 @@ def sign_up():
         cur.close()
         con.close()
 
+def blok_start_game():
+    global cheak, blok_game
+    blok_game = True
+    cheak = True
+
 
 def main_menu():
     global show_main_menu, autorization_complete, cheak_login, reg_complete, reg_error, cheak
     start_btn = Button(290, 70)
     settings_btn = Button(255, 70)
     quit_btn = Button(160, 70)
-    input_box_login = InputBox(480, 400, 100, 30, 'Введите логин')
+    input_box_login = InputBox(480, 400, 120, 30, 'Введите логин')
     sign_in_btn = Button(75, 40)
     sign_up_btn = Button(215, 45)
     last = None
@@ -163,6 +169,7 @@ def main_menu():
         input_box_login.update()
         screen.blit(main_menu_background, (0, 0))
         if show_authorization:
+            #pygame.draw.rect(screen, (255, 255, 255), (300, 400, 400, 300), 1)
             input_box_login.draw(screen)
             sign_in_btn.draw(445, 435, 'Войти', sign_in, font_size=20)
             sign_up_btn.draw(525, 435, 'Зарегистрироваться', sign_up, font_size=20)
@@ -181,6 +188,8 @@ def main_menu():
                 print_text('Вы успешно зарегистрированны!', 420, 200, font_size=25)
             elif reg_error is True and now - last <= 1500:
                 print_text('Такой ник уже используется', 420, 200, font_size=25)
+            elif blok_game is True and now - last <= 1500:
+                print_text('Сначала авторизуйтесь!', 420, 200, font_size=25)
             else:
                 cheak = False
                 autorization_complete = False
@@ -192,7 +201,7 @@ def main_menu():
         if play:
             start_btn.draw(50, 300, 'Начать игру', start_game)
         else:
-            start_btn.draw(50, 300, 'Начать игру')
+            start_btn.draw(50, 300, 'Начать игру', blok_start_game)
         settings_btn.draw(50, 400, 'Настройки', options_menu)
         quit_btn.draw(50, 500, 'Выход', terminate)
         pygame.display.update()
