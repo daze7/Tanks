@@ -7,7 +7,6 @@ import os
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
-import autorization
 
 player_x = 0
 player_y = 0
@@ -232,6 +231,9 @@ class Bullet(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.bottom = y
         self.rect.centerx = x
+        self.crash_tank = pygame.mixer.Sound("data/crash_tank.wav")
+        check_sounds()
+        self.crash_tank.set_volume(master_volume * sounds_volume * 3)
         self.direction = direction
         if self.direction == 'right':
             self.image = pygame.transform.rotate(bullet_image, 270)
@@ -263,6 +265,7 @@ class Bullet(pygame.sprite.Sprite):
                 roogi = pygame.sprite.spritecollide(self, enemy_group, False, False)
                 if roogi:
                     expl = Explosion(roogi[0].rect.center)
+                    self.crash_tank.play()
                     exp_group.add(expl)
                     self.kill()
                     roogi[0].kill()
@@ -303,6 +306,9 @@ class Player(pygame.sprite.Sprite):
         super().__init__(player_group, all_sprites)
         self.last_shoot = 0
         self.x, self.y = pos_x * 50, pos_y * 50
+        self.fair_player = pygame.mixer.Sound("data/fair-player.wav")
+        check_sounds()
+        self.fair_player.set_volume(master_volume * sounds_volume)
         player_x = pos_x
         player_y = pos_y
         self.direction = direction
@@ -347,6 +353,7 @@ class Player(pygame.sprite.Sprite):
     def shoot(self):
         now = pygame.time.get_ticks()
         if pygame.time.get_ticks() - self.last_shoot >= 400:
+            self.fair_player.play()
             self.last_shoot = now
             bullet = Bullet(self.rect.centerx, self.rect.top, self.direction, 'player')
             all_sprites.add(bullet)
@@ -520,6 +527,8 @@ class InputBox:
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
+                if self.text == 'Введите логин':
+                    self.text = ''
                 self.active = not self.active
             else:
                 self.active = False
@@ -581,14 +590,17 @@ lev = load_level('map/1.txt')
 
 def start_game():
 
-    fair_player = pygame.mixer.Sound("data/fair-player.wav")
+    #fair_player = pygame.mixer.Sound("data/fair-player.wav")
+    #check_sounds()
+    #fair_player.set_volume(master_volume * sounds_volume)
+    pygame.mixer.music.fadeout(2000)
     check_sounds()
-    fair_player.set_volume(master_volume * sounds_volume)
+    pygame.mixer.music.load('data/fon_game.mp3')
+    pygame.mixer.music.play(-1)
     move_left = False
     move_right = False
     move_up = False
     move_down = False
-    pygame.mixer.music.fadeout(2000)
     show_game = True
     # pygame.init()
     size = width, height = 500, 500
@@ -603,7 +615,7 @@ def start_game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     player.shoot()
-                    fair_player.play()
+                    #fair_player.play()
                 if event.key == pygame.K_w or event.key == pygame.K_UP:
                     move_up = True
                     move_down = False
