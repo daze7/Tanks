@@ -19,6 +19,7 @@ current_volume = 1
 show_main_menu = False
 show_optoins_menu = False
 show_game = False
+show_authorization = False
 autorization_complete = False
 cheak_login = False
 reg_complete = False
@@ -96,7 +97,7 @@ class Button(pygame.sprite.Sprite):
 
 
 def sign_in():
-    global play, autorization_complete, cheak_login, cheak
+    global play, autorization_complete, cheak_login, cheak, show_authorization
     f = open('data/user_login.txt', 'r')
     a = f.readline()
     f.close()
@@ -112,6 +113,7 @@ def sign_in():
             cheak = True
             autorization_complete = True
             play = True
+            show_authorization = False
 
         else:
             #print_text('Проверте правильность ввода данных', 350, 200, font_size=25)
@@ -149,13 +151,15 @@ def blok_start_game():
 
 
 def main_menu():
-    global show_main_menu, autorization_complete, cheak_login, reg_complete, reg_error, cheak
+    global show_main_menu, autorization_complete, cheak_login, reg_complete, reg_error, cheak, blok_game, \
+        show_authorization
     start_btn = Button(290, 70)
     settings_btn = Button(255, 70)
     quit_btn = Button(160, 70)
     input_box_login = InputBox(480, 400, 120, 30, 'Введите логин')
     sign_in_btn = Button(75, 40)
     sign_up_btn = Button(215, 45)
+
     last = None
     show_main_menu = True
     show_authorization = True
