@@ -79,7 +79,7 @@ exp6 = load_image('texture/tanks/Explosion_F.png')
 exp7 = load_image('texture/tanks/Explosion_G.png')
 exp8 = load_image('texture/tanks/Explosion_H.png')
 exp_a = [exp1, exp2, exp3, exp4, exp5, exp6, exp7, exp8]
-# bullet_image = load_image()
+bullet_image = load_image('texture/tanks/bullet1.png')
 tile_width = tile_height = 50
 
 
@@ -223,20 +223,25 @@ def main_menu():
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y, direction):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((10, 10))
-        self.image.fill((255, 0, 0))
+        pygame.sprite.Sprite.__init__(self, bullets_group)
+        #self.image = pygame.Surface((10, 10))
+        self.image = bullet_image
+        #bullets_group.add(self)
+        #self.image.fill((255, 0, 0))
         self.rect = self.image.get_rect()
         self.rect.bottom = y
         self.rect.centerx = x
         self.direction = direction
         if self.direction == 'right':
-            self.rect.bottom += 30
+            self.image = pygame.transform.rotate(bullet_image, 270)
+            self.rect.bottom += 40
             self.rect.centerx += 30
         if self.direction == 'left':
-            self.rect.bottom += 30
+            self.image = pygame.transform.rotate(bullet_image, 90)
+            self.rect.bottom += 40
             self.rect.centerx -= 30
         if self.direction == 'down':
+            self.image = pygame.transform.rotate(bullet_image, 180)
             self.rect.bottom += 60
         self.speedy = -10
 
@@ -326,8 +331,10 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, direction):
         super().__init__(enemy_group, all_sprites)
         self.x, self.y = pos_x * 50, pos_y * 50
+        self.tttime = 1
         self.direction = direction
         self.image = enemy_image
+        self.last_update = 0
         if self.direction == 'down':
             self.image = pygame.transform.rotate(enemy_image, 180)
         if self.direction == 'right':
@@ -340,40 +347,81 @@ class Enemy(pygame.sprite.Sprite):
     def possible_directions(self):
         where = []
         x = self.x
+        y = self.y - 2
+        self.rect = self.image.get_rect().move(x, y)
+        g = pygame.sprite.spritecollide(self, enemy_group, False, False)
+        if not(pygame.sprite.spritecollide(self, wall_group, False, False) or y > 450 or \
+                y < 0 or pygame.sprite.spritecollide(self, player_group, False, False) or len(g) > 1):
+            where.append('up')
+        y = self.y + 2
+        self.rect = self.image.get_rect().move(x, y)
+        g = pygame.sprite.spritecollide(self, enemy_group, False, False)
+        if not(pygame.sprite.spritecollide(self, wall_group, False, False) or y > 450 or \
+                y < 0 or pygame.sprite.spritecollide(self, player_group, False, False) or len(g) > 1):
+            where.append('down')
         y = self.y
-        if y - 2 <= 450 and y - 2 >= 0 and lev[x // 50][(y - 2) // 50] != '#':
-            where.append(0)
-        if y + 2 <= 450 and y + 2 >= 0 and lev[x // 50][(y + 2) // 50] != '#':
-            where.append(1)
-        if x + 2 <= 450 and x + 2 >= 0 and lev[(x + 2) // 50][y // 50] != '#':
-            where.append(2)
-        if x - 2 <= 450 and x - 2 >= 0 and lev[(x - 2) // 50][y // 50] != '#':
-            where.append(3)
+        x = self.x + 2
+        self.rect = self.image.get_rect().move(x, y)
+        g = pygame.sprite.spritecollide(self, enemy_group, False, False)
+        if not(pygame.sprite.spritecollide(self, wall_group, False, False) or x > 450 or \
+                x < 0 or pygame.sprite.spritecollide(self, player_group, False, False) or len(g) > 1):
+            where.append('right')
+        x = self.x - 2
+        self.rect = self.image.get_rect().move(x, y)
+        g = pygame.sprite.spritecollide(self, enemy_group, False, False)
+        if not(pygame.sprite.spritecollide(self, wall_group, False, False) or x > 450 or \
+                x < 0 or pygame.sprite.spritecollide(self, player_group, False, False) or len(g) > 1):
+            where.append('left')
+        self.rect = self.image.get_rect().move(self.x, self.y)
         return where
 
 
-    def update(self, pos_x, pos_y):
-        x = (self.x + pos_x) // 50
-        y = (self.y + pos_y) // 50
-        self.x += pos_x
-        self.y += pos_y
+    def update(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > 1000 * self.tttime:
+            self.last_update = now
+            self.tttime = random.randint(1, 5)
+            direct = self.possible_directions()
+            if len(direct) > 0:
+                self.direction = random.choice(direct)
         self.image = enemy_image
-        self.rect = self.image.get_rect().move(self.x, self.y)
-        if pygame.sprite.groupcollide(enemy_group, wall_group, False, False) or self.x > 450 or self.y > 450 or \
-                self.y < 0 or self.x < 0 or pygame.sprite.groupcollide(player_group, enemy_group, False, False):
-            self.x -= pos_x
-            self.y -= pos_y
-        self.image = enemy_image
-        self.direction = 'up'
-        if pos_x == 0 and pos_y > 0:
+        x = self.x
+        y = self.y
+        if self.direction == 'up':
+            self.y -= 2
+            self.rect = self.image.get_rect().move(self.x, self.y)
+            g = pygame.sprite.spritecollide(self, enemy_group, False, False)
+            if pygame.sprite.spritecollide(self, wall_group, False, False) or self.y > 450 or \
+                    self.y < 0 or pygame.sprite.spritecollide(self, player_group, False, False) or len(g) > 1:
+                self.last_update = 0
+                self.y += 2
+        elif self.direction == 'down':
+            self.y += 2
+            self.rect = self.image.get_rect().move(self.x, self.y)
+            g = pygame.sprite.spritecollide(self, enemy_group, False, False)
+            if pygame.sprite.spritecollide(self, wall_group, False, False) or self.y > 450 or \
+                    self.y < 0 or pygame.sprite.spritecollide(self, player_group, False, False) or len(g) > 1:
+                self.last_update = 0
+                self.y -= 2
             self.image = pygame.transform.rotate(enemy_image, 180)
-            self.direction = 'down'
-        if pos_x > 0 and pos_y == 0:
+        elif self.direction == 'right':
+            self.x += 2
+            self.rect = self.image.get_rect().move(self.x, self.y)
+            g = pygame.sprite.spritecollide(self, enemy_group, False, False)
+            if pygame.sprite.spritecollide(self, wall_group, False, False) or self.x > 450 or \
+                    self.x < 0 or pygame.sprite.spritecollide(self, player_group, False, False) or len(g) > 1:
+                self.last_update = 0
+                self.x -= 2
             self.image = pygame.transform.rotate(enemy_image, 270)
-            self.direction = 'right'
-        if pos_x < 0 and pos_y == 0:
+        elif self.direction == 'left':
+            self.x -= 2
+            self.rect = self.image.get_rect().move(self.x, self.y)
+            g = pygame.sprite.spritecollide(self, enemy_group, False, False)
+            if pygame.sprite.spritecollide(self, wall_group, False, False) or self.x > 450 or \
+                    self.x < 0 or pygame.sprite.spritecollide(self, player_group, False, False) or len(g) > 1:
+                self.last_update = 0
+                self.x += 2
             self.image = pygame.transform.rotate(enemy_image, 90)
-            self.direction = 'left'
         self.rect = self.image.get_rect().move(self.x, self.y)
 
 
@@ -533,16 +581,7 @@ def start_game():
             player.update(0, -2)
         if move_down:
             player.update(0, 2)
-        for j in enemy_group:
-            ryougi = random.choice(j.possible_directions())
-            if ryougi == 0:
-                j.update(0, -2)
-            if ryougi == 1:
-                j.update(0, 2)
-            if ryougi == 2:
-                j.update(2, 0)
-            if ryougi == 3:
-                j.update(-2, 0)
+        enemy_group.update()
         exp_group.update()
         bullets_group.update()
         screen.fill((0, 0, 0))
@@ -554,6 +593,7 @@ def start_game():
         bullets_group.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
+        #print(len(bullets_group))
         # pygame.event.pump()
     # pass
 
