@@ -9,10 +9,13 @@ from tkinter import *
 from tkinter import ttk
 import autorization
 
+player_x = 0
+player_y = 0
 play = False
 pygame.init()
 size = width, height = 800, 700
 screen = pygame.display.set_mode(size)
+pygame.display.set_caption('Танчики')
 FPS = 60
 clock = pygame.time.Clock()
 current_volume = 1
@@ -222,12 +225,10 @@ def main_menu():
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y, direction):
+    def __init__(self, x, y, direction, type):
         pygame.sprite.Sprite.__init__(self, bullets_group)
-        #self.image = pygame.Surface((10, 10))
+        self.type = type
         self.image = bullet_image
-        #bullets_group.add(self)
-        #self.image.fill((255, 0, 0))
         self.rect = self.image.get_rect()
         self.rect.bottom = y
         self.rect.centerx = x
@@ -255,17 +256,30 @@ class Bullet(pygame.sprite.Sprite):
         if self.direction == 'left':
             self.rect.x += self.speedy
         # убить, если он заходит за верхнюю часть экрана
-        if pygame.sprite.groupcollide(bullets_group, wall_group, True, False):
-            self.kill()
+        if self.type == 'player':
+            if pygame.sprite.spritecollide(self, wall_group, False, False):
+                self.kill()
+            else:
+                roogi = pygame.sprite.spritecollide(self, enemy_group, False, False)
+                if roogi:
+                    expl = Explosion(roogi[0].rect.center)
+                    exp_group.add(expl)
+                    self.kill()
+                    roogi[0].kill()
+                elif self.rect.bottom < 0 or self.rect.bottom > 500 or self.rect.x < 0 or self.rect.x > 500:
+                    self.kill()
         else:
-            roogi = pygame.sprite.spritecollide(self, enemy_group, False, False)
-            if roogi:
-                expl = Explosion(roogi[0].rect.center)
-                exp_group.add(expl)
+            if pygame.sprite.groupcollide(bullets_group, wall_group, False, False):
                 self.kill()
-                roogi[0].kill()
-            elif self.rect.bottom < 0 or self.rect.bottom > 500 or self.rect.x < 0 or self.rect.x > 500:
-                self.kill()
+            else:
+                roogi = pygame.sprite.spritecollide(self, player_group, False, False)
+                if roogi:
+                    expl = Explosion(roogi[0].rect.center)
+                    exp_group.add(expl)
+                    self.kill()
+                    #roogi[0].kill()
+                elif self.rect.bottom < 0 or self.rect.bottom > 500 or self.rect.x < 0 or self.rect.x > 500:
+                    self.kill()
 
 
 class Tile(pygame.sprite.Sprite):
@@ -284,8 +298,13 @@ class Wall(pygame.sprite.Sprite):
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, direction):
+        global player_x
+        global player_y
         super().__init__(player_group, all_sprites)
+        self.last_shoot = 0
         self.x, self.y = pos_x * 50, pos_y * 50
+        player_x = pos_x
+        player_y = pos_y
         self.direction = direction
         self.image = player_image
         if self.direction == 'down':
@@ -297,6 +316,8 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
     def update(self, pos_x, pos_y):
+        global player_x
+        global player_y
         # print(self.x, self.y)
         x = (self.x + pos_x) // 50
         y = (self.y + pos_y) // 50
@@ -320,17 +341,23 @@ class Player(pygame.sprite.Sprite):
             self.image = pygame.transform.rotate(player_image, 90)
             self.direction = 'left'
         self.rect = self.image.get_rect().move(self.x, self.y)
+        player_x = self.x // 50
+        player_y = self.y // 50
 
     def shoot(self):
-        bullet = Bullet(self.rect.centerx, self.rect.top, self.direction)
-        all_sprites.add(bullet)
-        bullets_group.add(bullet)
+        now = pygame.time.get_ticks()
+        if pygame.time.get_ticks() - self.last_shoot >= 400:
+            self.last_shoot = now
+            bullet = Bullet(self.rect.centerx, self.rect.top, self.direction, 'player')
+            all_sprites.add(bullet)
+            bullets_group.add(bullet)
 
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, direction):
         super().__init__(enemy_group, all_sprites)
         self.x, self.y = pos_x * 50, pos_y * 50
+        self.last_shoot = 0
         self.tttime = 1
         self.direction = direction
         self.image = enemy_image
@@ -376,6 +403,38 @@ class Enemy(pygame.sprite.Sprite):
         return where
 
 
+    def can_shoot(self):
+        x = self.x // 50
+        y = self.y // 50
+        print(x, y)
+        if x == player_x or y == player_y:
+            if y == player_y:
+                if x > player_x:
+                    self.direction = 'left'
+                    self.image = pygame.transform.rotate(enemy_image, 90)
+                else:
+                    self.direction = 'right'
+                    self.image = pygame.transform.rotate(enemy_image, 270)
+                now = pygame.time.get_ticks()
+                if pygame.time.get_ticks() - self.last_shoot >= 1000:
+                    self.last_shoot = now
+                    bullet = Bullet(self.rect.centerx, self.rect.top, self.direction, 'enemy')
+                    all_sprites.add(bullet)
+                    bullets_group.add(bullet)
+            else:
+                if y > player_y:
+                    self.direction = 'up'
+                else:
+                    self.direction = 'down'
+                    self.image = pygame.transform.rotate(enemy_image, 180)
+                now = pygame.time.get_ticks()
+                if pygame.time.get_ticks() - self.last_shoot >= 1000:
+                    self.last_shoot = now
+                    bullet = Bullet(self.rect.centerx, self.rect.top, self.direction, 'enemy')
+                    all_sprites.add(bullet)
+                    bullets_group.add(bullet)
+
+
     def update(self):
         now = pygame.time.get_ticks()
         if now - self.last_update > 1000 * self.tttime:
@@ -384,6 +443,7 @@ class Enemy(pygame.sprite.Sprite):
             direct = self.possible_directions()
             if len(direct) > 0:
                 self.direction = random.choice(direct)
+        self.can_shoot()
         self.image = enemy_image
         x = self.x
         y = self.y
