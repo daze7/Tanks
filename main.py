@@ -1,6 +1,6 @@
 import sqlite3
 import time
-
+import random
 import pygame
 import sys
 import os
@@ -323,10 +323,58 @@ class Player(pygame.sprite.Sprite):
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y):
+    def __init__(self, pos_x, pos_y, direction):
         super().__init__(enemy_group, all_sprites)
+        self.x, self.y = pos_x * 50, pos_y * 50
+        self.direction = direction
         self.image = enemy_image
+        if self.direction == 'down':
+            self.image = pygame.transform.rotate(enemy_image, 180)
+        if self.direction == 'right':
+            self.image = pygame.transform.rotate(enemy_image, 270)
+        if self.direction == 'left':
+            self.image = pygame.transform.rotate(enemy_image, 90)
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+
+
+    def possible_directions(self):
+        where = []
+        x = self.x
+        y = self.y
+        if y - 2 <= 450 and y - 2 >= 0 and lev[x // 50][(y - 2) // 50] != '#':
+            where.append(0)
+        if y + 2 <= 450 and y + 2 >= 0 and lev[x // 50][(y + 2) // 50] != '#':
+            where.append(1)
+        if x + 2 <= 450 and x + 2 >= 0 and lev[(x + 2) // 50][y // 50] != '#':
+            where.append(2)
+        if x - 2 <= 450 and x - 2 >= 0 and lev[(x - 2) // 50][y // 50] != '#':
+            where.append(3)
+        return where
+
+
+    def update(self, pos_x, pos_y):
+        x = (self.x + pos_x) // 50
+        y = (self.y + pos_y) // 50
+        self.x += pos_x
+        self.y += pos_y
+        self.image = enemy_image
+        self.rect = self.image.get_rect().move(self.x, self.y)
+        if pygame.sprite.groupcollide(enemy_group, wall_group, False, False) or self.x > 450 or self.y > 450 or \
+                self.y < 0 or self.x < 0 or pygame.sprite.groupcollide(player_group, enemy_group, False, False):
+            self.x -= pos_x
+            self.y -= pos_y
+        self.image = enemy_image
+        self.direction = 'up'
+        if pos_x == 0 and pos_y > 0:
+            self.image = pygame.transform.rotate(enemy_image, 180)
+            self.direction = 'down'
+        if pos_x > 0 and pos_y == 0:
+            self.image = pygame.transform.rotate(enemy_image, 270)
+            self.direction = 'right'
+        if pos_x < 0 and pos_y == 0:
+            self.image = pygame.transform.rotate(enemy_image, 90)
+            self.direction = 'left'
+        self.rect = self.image.get_rect().move(self.x, self.y)
 
 
 class Explosion(pygame.sprite.Sprite):
@@ -414,7 +462,7 @@ def generate_level(level):
                 # print(x, y)
             elif level[y][x] == '!':
                 Tile(x, y)
-                new_enemy = Enemy(x, y)
+                new_enemy = Enemy(x, y, 'down')
 
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
@@ -424,6 +472,7 @@ lev = load_level('map/1.txt')
 
 
 def start_game():
+
     fair_player = pygame.mixer.Sound("data/fair-player.wav")
     check_sounds()
     fair_player.set_volume(master_volume * sounds_volume)
@@ -484,6 +533,16 @@ def start_game():
             player.update(0, -2)
         if move_down:
             player.update(0, 2)
+        for j in enemy_group:
+            ryougi = random.choice(j.possible_directions())
+            if ryougi == 0:
+                j.update(0, -2)
+            if ryougi == 1:
+                j.update(0, 2)
+            if ryougi == 2:
+                j.update(2, 0)
+            if ryougi == 3:
+                j.update(-2, 0)
         exp_group.update()
         bullets_group.update()
         screen.fill((0, 0, 0))
@@ -492,7 +551,6 @@ def start_game():
         player_group.draw(screen)
         enemy_group.draw(screen)
         exp_group.draw(screen)
-        print(len(bullets_group))
         bullets_group.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
