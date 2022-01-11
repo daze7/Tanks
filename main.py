@@ -64,11 +64,21 @@ tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 bullets_group = pygame.sprite.Group()
+exp_group = pygame.sprite.Group()
 
 wall_images = load_image('texture/map/Tilemap/wall1.png')
 tile_images = load_image('texture/map/Tilemap/sand1.png')
 player_image = load_image('texture/tanks/player.png')
 enemy_image = load_image('texture/tanks/Enemy.png')
+exp1 = load_image('texture/tanks/Explosion_A.png')
+exp2 = load_image('texture/tanks/Explosion_B.png')
+exp3 = load_image('texture/tanks/Explosion_C.png')
+exp4 = load_image('texture/tanks/Explosion_D.png')
+exp5 = load_image('texture/tanks/Explosion_E.png')
+exp6 = load_image('texture/tanks/Explosion_F.png')
+exp7 = load_image('texture/tanks/Explosion_G.png')
+exp8 = load_image('texture/tanks/Explosion_H.png')
+exp_a = [exp1, exp2, exp3, exp4, exp5, exp6, exp7, exp8]
 # bullet_image = load_image()
 tile_width = tile_height = 50
 
@@ -240,11 +250,17 @@ class Bullet(pygame.sprite.Sprite):
         if self.direction == 'left':
             self.rect.x += self.speedy
         # убить, если он заходит за верхнюю часть экрана
-        if pygame.sprite.groupcollide(bullets_group, wall_group, True, False) or \
-                pygame.sprite.groupcollide(bullets_group, enemy_group, True, True):
+        if pygame.sprite.groupcollide(bullets_group, wall_group, True, False):
             self.kill()
-        elif self.rect.bottom < 0 or self.rect.bottom > 500 or self.rect.x < 0 or self.rect.x > 500:
-            self.kill()
+        else:
+            roogi = pygame.sprite.spritecollide(self, enemy_group, False, False)
+            if roogi:
+                expl = Explosion(roogi[0].rect.center)
+                exp_group.add(expl)
+                self.kill()
+                roogi[0].kill()
+            elif self.rect.bottom < 0 or self.rect.bottom > 500 or self.rect.x < 0 or self.rect.x > 500:
+                self.kill()
 
 
 class Tile(pygame.sprite.Sprite):
@@ -311,6 +327,30 @@ class Enemy(pygame.sprite.Sprite):
         super().__init__(enemy_group, all_sprites)
         self.image = enemy_image
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+
+
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, center):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = exp_a[0]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.frame = 0
+        self.last_update = pygame.time.get_ticks()
+        self.frame_rate = 50
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.frame_rate:
+            self.last_update = now
+            self.frame += 1
+            if self.frame == len(exp_a):
+                self.kill()
+            else:
+                center = self.rect.center
+                self.image = exp_a[self.frame]
+                self.rect = self.image.get_rect()
+                self.rect.center = center
 
 
 class InputBox:
@@ -444,12 +484,14 @@ def start_game():
             player.update(0, -2)
         if move_down:
             player.update(0, 2)
+        exp_group.update()
         bullets_group.update()
         screen.fill((0, 0, 0))
         tiles_group.draw(screen)
         wall_group.draw(screen)
         player_group.draw(screen)
         enemy_group.draw(screen)
+        exp_group.draw(screen)
         print(len(bullets_group))
         bullets_group.draw(screen)
         pygame.display.flip()
