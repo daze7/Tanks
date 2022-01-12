@@ -282,7 +282,10 @@ class Bullet(pygame.sprite.Sprite):
         if self.direction == 'down':
             self.image = pygame.transform.rotate(bullet_image, 180)
             self.rect.bottom += 60
-        self.speedy = -10
+        if self.type == 'enemy':
+            self.speedy = -5
+        else:
+            self.speedy = -10
 
     def update(self):
         if self.direction == 'up':
