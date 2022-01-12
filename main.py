@@ -177,6 +177,7 @@ def restart_auth():
 def main_menu():
     global show_main_menu, autorization_complete, cheak_login, reg_complete, reg_error, cheak, blok_game, \
         show_authorization, show_user_statistik
+    how_to_play_btn = Button(200, 45)
     start_btn = Button(290, 70)
     settings_btn = Button(255, 70)
     quit_btn = Button(160, 70)
@@ -252,6 +253,7 @@ def main_menu():
             start_btn.draw(50, 300, 'Начать игру', start_game)
         else:
             start_btn.draw(50, 300, 'Начать игру', blok_start_game)
+        how_to_play_btn.draw(600, 655, 'Как играть?', how_to_play, 33)
         settings_btn.draw(50, 400, 'Настройки', options_menu)
         quit_btn.draw(50, 500, 'Выход', terminate)
         pygame.display.update()
@@ -719,6 +721,30 @@ def check_sounds():
     music_volume = float(f.readline().split('=')[1])
     f.close()
 
+
+def how_to_play():
+    options_menu_background = pygame.image.load("data/options_menu_background.png")
+    show = True
+    while show:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE or event.key == pygame.K_ESCAPE:
+                    show = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                show = False
+        screen.blit(options_menu_background, (0, 0))
+        print_text('Управление', 200, 25, (255, 255, 255), 'data/EE-Bellflower.ttf', 75)
+        s = '1. Для передвиения используйте WASD или Стрелки'
+        print_text(s, 10, 125, (255, 255, 255), 'data/EE-Bellflower.ttf', 33)
+        s = '2. Нажмите пробел, чтобы стрелять'
+        print_text(s, 10, 225, (255, 255, 255), 'data/EE-Bellflower.ttf', 33)
+        print_text('Цель игры', 200, 325, (255, 255, 255), 'data/EE-Bellflower.ttf', 75)
+        s = 'Уничтожьте вражеские машины как можно скорее'
+        print_text(s, 10, 475, (255, 255, 255), 'data/EE-Bellflower.ttf', 33)
+        pygame.display.update()
 
 def options_menu():
     global show_optoins_menu
