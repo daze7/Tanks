@@ -24,13 +24,16 @@ show_game = False
 show_authorization = False
 autorization_complete = False
 show_user_statistik = False
+show_game_over = False
 cheak_login = False
 reg_complete = False
 reg_error = False
 cheak = False
 blok_game = False
 last = None
+player_life = 5
 login_user = ''
+total_score = 0
 COLOR_INACTIVE = pygame.Color('white')
 COLOR_ACTIVE = pygame.Color('green')
 FONT = pygame.font.Font('data/EE-Bellflower.ttf', 20)
@@ -177,22 +180,41 @@ def restart_auth():
     play = False
     show_authorization = True
 
-def score_update():
+def save():
+    bd = sqlite3.connect("data/database/users.db")
+    bd_cur = bd.cursor()
     f = open('data/user.txt', 'r')
     id = f.readline()
+    f.close()
+    bd_cur.execute(f'SELECT * FROM user WHERE id="{id}"')
+    value = bd_cur.fetchall()
+    if total_score > value[0][2]:
+        bd_cur.execute(f"UPDATE user \
+                        SET bestscore = {total_score} \
+                        WHERE id = '{id}'")
+        bd.commit()
+
+def score_update():
+    global total_score
     now = pygame.time.get_ticks()
     res = now - last
-    score = 0
     if res < 5000:
-        score += 100
+        total_score += 100
     elif 5000 <= res <= 15000:
-        score += 75
+        total_score += 75
     elif res > 15000:
-        score += 50
-    bd_cur.execute(f"UPDATE user \
-                    SET bestscore = bestscore + {score} \
-                    WHERE id = '{id}'")
-    bd.commit()
+        total_score += 50
+
+def hit_player():
+    global player_life, show_game_over
+    player_life -= 1
+    if player_life <= 0:
+        show_game_over = True
+
+def show_menu():
+    global show_game, show_main_menu
+    show_game = False
+    show_main_menu = True
 
 
 def main_menu():
@@ -340,6 +362,7 @@ class Bullet(pygame.sprite.Sprite):
                 if roogi:
                     expl = Explosion(roogi[0].rect.center)
                     self.crash_tank.play()
+                    hit_player()
                     exp_group.add(expl)
                     self.kill()
                     #roogi[0].kill()
@@ -653,16 +676,24 @@ def generate_level(level):
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
+def cheak_level(level=2):
+    if level == 1:
+        return generate_level(load_level('map/1.txt'))
+    if level == 2:
+        return generate_level(load_level('map/1.txt'))
 
-lev = load_level('map/1.txt')
+#lev = load_level('map/1.txt')
 
 
 def start_game():
-    global last
+    global last, total_score
     pygame.mixer.music.fadeout(200)
     check_sounds()
     pygame.mixer.music.load('data/fon_game.mp3')
     pygame.mixer.music.play(-1)
+    btn_in_menu = Button(80, 40)
+    btn_next_level = Button(80, 40)
+    total_score = 0
     move_left = False
     move_right = False
     move_up = False
@@ -671,7 +702,7 @@ def start_game():
     # pygame.init()
     size = width, height = 500, 500
     screen = pygame.display.set_mode(size)
-    player, level_x, level_y = generate_level(load_level('map/1.txt'))
+    player, level_x, level_y = cheak_level(level=1)
     screen.fill((250, 250, 250))
     while show_game:
         for event in pygame.event.get():
@@ -719,16 +750,28 @@ def start_game():
             player.update(0, -2)
         if move_down:
             player.update(0, 2)
-        enemy_group.update()
-        exp_group.update()
-        bullets_group.update()
-        screen.fill((0, 0, 0))
-        tiles_group.draw(screen)
-        wall_group.draw(screen)
-        player_group.draw(screen)
-        enemy_group.draw(screen)
-        exp_group.draw(screen)
-        bullets_group.draw(screen)
+        if show_game_over:
+            screen.fill((0, 0, 0))
+            print_text('GAME OVER', 100, 100, font_color=(255, 0, 0))
+            print_text(f'Ваши очки: {total_score}', 100, 300, font_size=20)
+            save()
+            #btn_in_menu.draw(300, 400, 'Меню', show_menu, font_size=25)
+        elif len(enemy_group) == 0:
+            screen.fill((0, 0, 0))
+            print_text('Level 1 !!!WIN!!!', 100, 100, font_color=(255, 0, 0))
+            print_text(f'Ваши очки: {total_score}', 100, 300, font_size=20)
+            btn_next_level.draw(200, 400, 'Уровень 2', cheak_level, font_size=25)
+        else:
+            enemy_group.update()
+            exp_group.update()
+            bullets_group.update()
+            screen.fill((0, 0, 0))
+            tiles_group.draw(screen)
+            wall_group.draw(screen)
+            player_group.draw(screen)
+            enemy_group.draw(screen)
+            exp_group.draw(screen)
+            bullets_group.draw(screen)
         if not last:
             last = pygame.time.get_ticks()
         pygame.display.flip()
@@ -858,8 +901,6 @@ check_sounds()
 pygame.mixer.music.load('data/main_menu_music.wav')
 pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(master_volume * music_volume)
-bd = sqlite3.connect("data/database/users.db")
-bd_cur = bd.cursor()
 # print(master_volume, music_volume)
 
 main_menu()
