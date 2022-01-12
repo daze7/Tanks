@@ -593,7 +593,7 @@ def start_game():
     #fair_player = pygame.mixer.Sound("data/fair-player.wav")
     #check_sounds()
     #fair_player.set_volume(master_volume * sounds_volume)
-    pygame.mixer.music.fadeout(2000)
+    pygame.mixer.music.fadeout(200)
     check_sounds()
     pygame.mixer.music.load('data/fon_game.mp3')
     pygame.mixer.music.play(-1)
