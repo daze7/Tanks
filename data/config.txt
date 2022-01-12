@@ -1,3 +1,3 @@
-master_volume=0.505
-sounds_volume=0.5
+master_volume=0.135
+sounds_volume=0.19
 music_volume=0.9

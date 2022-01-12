@@ -165,6 +165,7 @@ def blok_start_game():
 def main_menu():
     global show_main_menu, autorization_complete, cheak_login, reg_complete, reg_error, cheak, blok_game, \
         show_authorization
+    how_to_play_btn = Button(200, 45)
     start_btn = Button(290, 70)
     settings_btn = Button(255, 70)
     quit_btn = Button(160, 70)
@@ -218,6 +219,7 @@ def main_menu():
             start_btn.draw(50, 300, 'Начать игру', start_game)
         else:
             start_btn.draw(50, 300, 'Начать игру', blok_start_game)
+        how_to_play_btn.draw(600, 655, 'Как играть?', how_to_play, 33)
         settings_btn.draw(50, 400, 'Настройки', options_menu)
         quit_btn.draw(50, 500, 'Выход', terminate)
         pygame.display.update()
@@ -246,7 +248,7 @@ class Bullet(pygame.sprite.Sprite):
         if self.direction == 'down':
             self.image = pygame.transform.rotate(bullet_image, 180)
             self.rect.bottom += 60
-        self.speedy = -10
+        self.speedy = -7
 
     def update(self):
         if self.direction == 'up':
@@ -413,7 +415,6 @@ class Enemy(pygame.sprite.Sprite):
     def can_shoot(self):
         x = self.x // 50
         y = self.y // 50
-        print(x, y)
         if x == player_x or y == player_y:
             if y == player_y:
                 if x > player_x:
@@ -589,7 +590,7 @@ lev = load_level('map/1.txt')
 
 
 def start_game():
-
+    #print('starting...')
     #fair_player = pygame.mixer.Sound("data/fair-player.wav")
     #check_sounds()
     #fair_player.set_volume(master_volume * sounds_volume)
@@ -680,6 +681,32 @@ def check_sounds():
     sounds_volume = float(f.readline().split('=')[1])
     music_volume = float(f.readline().split('=')[1])
     f.close()
+
+
+def how_to_play():
+    print('YES')
+    show = True
+    options_menu_background = pygame.image.load("data/options_menu_background.png")
+    while show:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE or event.key == pygame.K_ESCAPE:
+                    show = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                show = False
+        screen.blit(options_menu_background, (0, 0))
+        print_text('Управление', 250, 25, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
+        s = '1. Для перемещения используйте WASD или СТРЕЛКИ'
+        print_text(s, 20, 100, (255, 255, 255), 'data/EE-Bellflower.ttf', 30)
+        s = '2. Для стрельбы используйте Пробел'
+        print_text(s, 20, 200, (255, 255, 255), 'data/EE-Bellflower.ttf', 30)
+        print_text('Цель игры', 250, 300, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
+        s = 'Уничтожить все вражеские танки как можно быстрее'
+        print_text(s, 20, 400, (255, 255, 255), 'data/EE-Bellflower.ttf', 30)
+        pygame.display.update()
 
 
 def options_menu():
