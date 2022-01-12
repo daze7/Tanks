@@ -23,6 +23,7 @@ show_optoins_menu = False
 show_game = False
 show_authorization = False
 autorization_complete = False
+show_user_statistik = False
 cheak_login = False
 reg_complete = False
 reg_error = False
@@ -109,7 +110,7 @@ class Button(pygame.sprite.Sprite):
 
 
 def sign_in():
-    global play, autorization_complete, cheak_login, cheak, show_authorization
+    global play, autorization_complete, cheak_login, cheak, show_authorization, show_user_statistik
     f = open('data/user_login.txt', 'r')
     a = f.readline()
     f.close()
@@ -126,6 +127,7 @@ def sign_in():
             autorization_complete = True
             play = True
             show_authorization = False
+            show_user_statistik = True
 
         else:
             #print_text('Проверте правильность ввода данных', 350, 200, font_size=25)
@@ -148,7 +150,7 @@ def sign_up():
             cheak = True
             reg_error = True
         else:
-            cur.execute(f"INSERT INTO user(login,score) VALUES ('{a}', 0)")
+            cur.execute(f"INSERT INTO user(login,bestscore) VALUES ('{a}', 0)")
             #print_text('Вы успешно зарегистрированны!', 420, 200, font_size=25)
             cheak = True
             reg_complete = True
@@ -161,18 +163,29 @@ def blok_start_game():
     blok_game = True
     cheak = True
 
+def restart_auth():
+    global show_authorization, show_user_statistik, blok_game, play
+    f = open('data/user_login.txt', 'w')
+    f.write('')
+    f.close()
+    show_user_statistik = False
+    blok_game = True
+    play = False
+    show_authorization = True
+
 
 def main_menu():
     global show_main_menu, autorization_complete, cheak_login, reg_complete, reg_error, cheak, blok_game, \
-        show_authorization
-    how_to_play_btn = Button(200, 45)
+        show_authorization, show_user_statistik
     start_btn = Button(290, 70)
     settings_btn = Button(255, 70)
     quit_btn = Button(160, 70)
     input_box_login = InputBox(480, 400, 120, 30, 'Введите логин')
     sign_in_btn = Button(75, 40)
     sign_up_btn = Button(215, 45)
-
+    restart_authorization = Button(230, 45)
+    value = None
+    cheak_bd = True
     last = None
     show_main_menu = True
     show_authorization = True
@@ -186,6 +199,7 @@ def main_menu():
         input_box_login.update()
         screen.blit(main_menu_background, (0, 0))
         if show_authorization:
+            cheak_bd = True
             #pygame.draw.rect(screen, (255, 255, 255), (300, 400, 400, 300), 1)
             input_box_login.draw(screen)
             sign_in_btn.draw(445, 435, 'Войти', sign_in, font_size=20)
@@ -193,12 +207,31 @@ def main_menu():
             f = open('data/user_login.txt', 'w')
             f.write(input_box_login.text)
             f.close()
+        if show_authorization is False and cheak_bd is True:
+            cheak_bd = False
+            con = sqlite3.connect("data/database/users.db")
+            cur = con.cursor()
+            f = open('data/user_login.txt', 'r')
+            a = f.readline()
+            cur.execute(f'SELECT * FROM user WHERE login="{a}";')
+            value = cur.fetchall()
+            f.close()
+            cur.close()
+            con.close()
+        if show_user_statistik:
+            f = open('data/user_login.txt', 'r')
+            text = f'Добро пожаловать, {f.readline()}!'
+            f.close()
+            print_text(text, 450, 200, font_size=25)
+            if value[0][2] > 0:
+                print_text(f'Ваш лучший результат: {value[0][2]}', 460, 230, font_size=20)
+            restart_authorization.draw(550, 600, 'Выход из аккаунта', restart_auth, font_size=25)
         if cheak:
             if not last:
                 last = pygame.time.get_ticks()
             now = pygame.time.get_ticks()
             if autorization_complete is True and now - last <= 1500:
-                print_text('Успешная авторизация!', 450, 200, font_size=25)
+                print_text('Успешная авторизация!', 450, 100, font_size=25)
             elif cheak_login is True and now - last <= 1500:
                 print_text('Проверте правильность ввода данных', 350, 200, font_size=25)
             elif reg_complete is True and now - last <= 1500:
@@ -219,7 +252,6 @@ def main_menu():
             start_btn.draw(50, 300, 'Начать игру', start_game)
         else:
             start_btn.draw(50, 300, 'Начать игру', blok_start_game)
-        how_to_play_btn.draw(600, 655, 'Как играть?', how_to_play, 33)
         settings_btn.draw(50, 400, 'Настройки', options_menu)
         quit_btn.draw(50, 500, 'Выход', terminate)
         pygame.display.update()
@@ -235,7 +267,7 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.centerx = x
         self.crash_tank = pygame.mixer.Sound("data/crash_tank.wav")
         check_sounds()
-        self.crash_tank.set_volume(master_volume * sounds_volume * 3)
+        self.crash_tank.set_volume(master_volume * sounds_volume * 2)
         self.direction = direction
         if self.direction == 'right':
             self.image = pygame.transform.rotate(bullet_image, 270)
@@ -248,7 +280,7 @@ class Bullet(pygame.sprite.Sprite):
         if self.direction == 'down':
             self.image = pygame.transform.rotate(bullet_image, 180)
             self.rect.bottom += 60
-        self.speedy = -7
+        self.speedy = -10
 
     def update(self):
         if self.direction == 'up':
@@ -280,6 +312,7 @@ class Bullet(pygame.sprite.Sprite):
                 roogi = pygame.sprite.spritecollide(self, player_group, False, False)
                 if roogi:
                     expl = Explosion(roogi[0].rect.center)
+                    self.crash_tank.play()
                     exp_group.add(expl)
                     self.kill()
                     #roogi[0].kill()
@@ -371,6 +404,9 @@ class Enemy(pygame.sprite.Sprite):
         self.direction = direction
         self.image = enemy_image
         self.last_update = 0
+        self.fair_player = pygame.mixer.Sound("data/fair-player.wav")
+        check_sounds()
+        self.fair_player.set_volume(master_volume * sounds_volume)
         if self.direction == 'down':
             self.image = pygame.transform.rotate(enemy_image, 180)
         if self.direction == 'right':
@@ -415,6 +451,7 @@ class Enemy(pygame.sprite.Sprite):
     def can_shoot(self):
         x = self.x // 50
         y = self.y // 50
+        print(x, y)
         if x == player_x or y == player_y:
             if y == player_y:
                 if x > player_x:
@@ -427,6 +464,10 @@ class Enemy(pygame.sprite.Sprite):
                 if pygame.time.get_ticks() - self.last_shoot >= 1000:
                     self.last_shoot = now
                     bullet = Bullet(self.rect.centerx, self.rect.top, self.direction, 'enemy')
+                    fair_player = pygame.mixer.Sound("data/fair-player.wav")
+                    check_sounds()
+                    fair_player.set_volume(master_volume * sounds_volume)
+                    self.fair_player.play()
                     all_sprites.add(bullet)
                     bullets_group.add(bullet)
             else:
@@ -590,10 +631,6 @@ lev = load_level('map/1.txt')
 
 
 def start_game():
-    #print('starting...')
-    #fair_player = pygame.mixer.Sound("data/fair-player.wav")
-    #check_sounds()
-    #fair_player.set_volume(master_volume * sounds_volume)
     pygame.mixer.music.fadeout(200)
     check_sounds()
     pygame.mixer.music.load('data/fon_game.mp3')
@@ -681,32 +718,6 @@ def check_sounds():
     sounds_volume = float(f.readline().split('=')[1])
     music_volume = float(f.readline().split('=')[1])
     f.close()
-
-
-def how_to_play():
-    print('YES')
-    show = True
-    options_menu_background = pygame.image.load("data/options_menu_background.png")
-    while show:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE or event.key == pygame.K_ESCAPE:
-                    show = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                show = False
-        screen.blit(options_menu_background, (0, 0))
-        print_text('Управление', 250, 25, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
-        s = '1. Для перемещения используйте WASD или СТРЕЛКИ'
-        print_text(s, 20, 100, (255, 255, 255), 'data/EE-Bellflower.ttf', 30)
-        s = '2. Для стрельбы используйте Пробел'
-        print_text(s, 20, 200, (255, 255, 255), 'data/EE-Bellflower.ttf', 30)
-        print_text('Цель игры', 250, 300, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
-        s = 'Уничтожить все вражеские танки как можно быстрее'
-        print_text(s, 20, 400, (255, 255, 255), 'data/EE-Bellflower.ttf', 30)
-        pygame.display.update()
 
 
 def options_menu():
