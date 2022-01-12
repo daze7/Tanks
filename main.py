@@ -29,6 +29,7 @@ reg_complete = False
 reg_error = False
 cheak = False
 blok_game = False
+last = None
 login_user = ''
 COLOR_INACTIVE = pygame.Color('white')
 COLOR_ACTIVE = pygame.Color('green')
@@ -119,6 +120,9 @@ def sign_in():
         cur = con.cursor()
         cur.execute(f'SELECT * FROM user WHERE login="{a}";')
         value = cur.fetchall()
+        f = open('data/user.txt', 'w')
+        f.write(str(value[0][0]))
+        f.close()
         cur.close()
         con.close()
         if value != []:
@@ -172,6 +176,23 @@ def restart_auth():
     blok_game = True
     play = False
     show_authorization = True
+
+def score_update():
+    f = open('data/user.txt', 'r')
+    id = f.readline()
+    now = pygame.time.get_ticks()
+    res = now - last
+    score = 0
+    if res < 5000:
+        score += 100
+    elif 5000 <= res <= 15000:
+        score += 75
+    elif res > 15000:
+        score += 50
+    bd_cur.execute(f"UPDATE user \
+                    SET bestscore = bestscore + {score} \
+                    WHERE id = '{id}'")
+    bd.commit()
 
 
 def main_menu():
@@ -303,6 +324,7 @@ class Bullet(pygame.sprite.Sprite):
                     exp_group.add(expl)
                     self.kill()
                     roogi[0].kill()
+                    score_update()
                 elif self.rect.bottom < 0 or self.rect.bottom > 500 or self.rect.x < 0 or self.rect.x > 500:
                     self.kill()
         else:
@@ -451,7 +473,7 @@ class Enemy(pygame.sprite.Sprite):
     def can_shoot(self):
         x = self.x // 50
         y = self.y // 50
-        print(x, y)
+        #print(x, y)
         if x == player_x or y == player_y:
             if y == player_y:
                 if x > player_x:
@@ -631,6 +653,7 @@ lev = load_level('map/1.txt')
 
 
 def start_game():
+    global last
     pygame.mixer.music.fadeout(200)
     check_sounds()
     pygame.mixer.music.load('data/fon_game.mp3')
@@ -701,6 +724,8 @@ def start_game():
         enemy_group.draw(screen)
         exp_group.draw(screen)
         bullets_group.draw(screen)
+        if not last:
+            last = pygame.time.get_ticks()
         pygame.display.flip()
         clock.tick(FPS)
         #print(len(bullets_group))
@@ -804,6 +829,8 @@ check_sounds()
 pygame.mixer.music.load('data/main_menu_music.wav')
 pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(master_volume * music_volume)
+bd = sqlite3.connect("data/database/users.db")
+bd_cur = bd.cursor()
 # print(master_volume, music_volume)
 
 main_menu()
