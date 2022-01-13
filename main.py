@@ -8,12 +8,18 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 
+def size_menu():
+    global size, width, height, screen
+    size = width, height = 800, 700
+    screen = pygame.display.set_mode(size)
+
 player_x = 0
 player_y = 0
 play = False
 pygame.init()
-size = width, height = 800, 700
-screen = pygame.display.set_mode(size)
+size = width, height = 0, 0
+screen = None
+size_menu()
 pygame.display.set_caption('Танчики')
 FPS = 60
 clock = pygame.time.Clock()
@@ -31,6 +37,7 @@ reg_error = False
 cheak = False
 blok_game = False
 last = None
+value = None
 player_life = 5
 login_user = ''
 total_score = 0
@@ -123,12 +130,12 @@ def sign_in():
         cur = con.cursor()
         cur.execute(f'SELECT * FROM user WHERE login="{a}";')
         value = cur.fetchall()
-        f = open('data/user.txt', 'w')
-        f.write(str(value[0][0]))
-        f.close()
         cur.close()
         con.close()
         if value != []:
+            f = open('data/user.txt', 'w')
+            f.write(str(value[0][0]))
+            f.close()
             #print_text('Успешная авторизация!', 450, 200, font_size=25)
             cheak = True
             autorization_complete = True
@@ -214,12 +221,15 @@ def hit_player():
 def show_menu():
     global show_game, show_main_menu
     show_game = False
+    size_menu()
     show_main_menu = True
+    #screen.fill((0, 0, 0))
+    #show_menu()
 
 
 def main_menu():
     global show_main_menu, autorization_complete, cheak_login, reg_complete, reg_error, cheak, blok_game, \
-        show_authorization, show_user_statistik
+        show_authorization, show_user_statistik, value
     how_to_play_btn = Button(200, 45)
     start_btn = Button(290, 70)
     settings_btn = Button(255, 70)
@@ -228,11 +238,11 @@ def main_menu():
     sign_in_btn = Button(75, 40)
     sign_up_btn = Button(215, 45)
     restart_authorization = Button(230, 45)
-    value = None
     cheak_bd = True
     last = None
     show_main_menu = True
-    show_authorization = True
+    if not show_user_statistik is True:
+        show_authorization = True
     main_menu_background = pygame.image.load("data/main_menu_background.png")
     while show_main_menu:
         for event in pygame.event.get():
@@ -755,7 +765,7 @@ def start_game():
             print_text('GAME OVER', 100, 100, font_color=(255, 0, 0))
             print_text(f'Ваши очки: {total_score}', 100, 300, font_size=20)
             save()
-            #btn_in_menu.draw(300, 400, 'Меню', show_menu, font_size=25)
+            btn_in_menu.draw(300, 400, 'Меню', show_menu, font_size=25)
         elif len(enemy_group) == 0:
             screen.fill((0, 0, 0))
             print_text('Level 1 !!!WIN!!!', 100, 100, font_color=(255, 0, 0))
