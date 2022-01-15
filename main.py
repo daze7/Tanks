@@ -690,7 +690,7 @@ def cheak_level(level=2):
     if level == 1:
         return generate_level(load_level('map/1.txt'))
     if level == 2:
-        return generate_level(load_level('map/1.txt'))
+        return generate_level(load_level('map/2.txt'))
 
 #lev = load_level('map/1.txt')
 
