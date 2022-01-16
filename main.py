@@ -13,6 +13,8 @@ def size_menu():
     size = width, height = 800, 700
     screen = pygame.display.set_mode(size)
 
+levell = []
+current_level = 1
 player_x = 0
 player_y = 0
 play = False
@@ -312,6 +314,7 @@ def main_menu():
         pygame.display.update()
 
 
+
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y, direction, type):
         pygame.sprite.Sprite.__init__(self, bullets_group)
@@ -375,7 +378,9 @@ class Bullet(pygame.sprite.Sprite):
                     hit_player()
                     exp_group.add(expl)
                     self.kill()
-                    #roogi[0].kill()
+                    roogi[0].kill()
+                    global show_game_over
+                    show_game_over = True
                 elif self.rect.bottom < 0 or self.rect.bottom > 500 or self.rect.x < 0 or self.rect.x > 500:
                     self.kill()
 
@@ -511,37 +516,48 @@ class Enemy(pygame.sprite.Sprite):
     def can_shoot(self):
         x = self.x // 50
         y = self.y // 50
-        #print(x, y)
         if x == player_x or y == player_y:
+            s_shoot = True
             if y == player_y:
                 if x > player_x:
-                    self.direction = 'left'
-                    self.image = pygame.transform.rotate(enemy_image, 90)
+                    for i in range(x - 1, player_x, -1):
+                        if levell[y][i] == '#':
+                            s_shoot = False
+                            break
+                    if s_shoot:
+                        self.direction = 'left'
+                        self.image = pygame.transform.rotate(enemy_image, 90)
                 else:
-                    self.direction = 'right'
-                    self.image = pygame.transform.rotate(enemy_image, 270)
-                now = pygame.time.get_ticks()
-                if pygame.time.get_ticks() - self.last_shoot >= 1000:
-                    self.last_shoot = now
-                    bullet = Bullet(self.rect.centerx, self.rect.top, self.direction, 'enemy')
-                    fair_player = pygame.mixer.Sound("data/fair-player.wav")
-                    check_sounds()
-                    fair_player.set_volume(master_volume * sounds_volume)
-                    self.fair_player.play()
-                    all_sprites.add(bullet)
-                    bullets_group.add(bullet)
+                    for i in range(x + 1, player_x):
+                        if levell[y][i] == '#':
+                            s_shoot = False
+                            break
+                    if s_shoot:
+                        self.direction = 'right'
+                        self.image = pygame.transform.rotate(enemy_image, 270)
             else:
                 if y > player_y:
-                    self.direction = 'up'
+                    for i in range(player_y + 1, y):
+                        if levell[i][x] == '#':
+                            s_shoot = False
+                            break
+                    if s_shoot:
+                        self.direction = 'up'
                 else:
-                    self.direction = 'down'
-                    self.image = pygame.transform.rotate(enemy_image, 180)
-                now = pygame.time.get_ticks()
-                if pygame.time.get_ticks() - self.last_shoot >= 1000:
-                    self.last_shoot = now
-                    bullet = Bullet(self.rect.centerx, self.rect.top, self.direction, 'enemy')
-                    all_sprites.add(bullet)
-                    bullets_group.add(bullet)
+                    for i in range(y, player_y + 1):
+                        if levell[i][x] == '#':
+                            s_shoot = False
+                            break
+                    if s_shoot:
+                        self.direction = 'down'
+                        self.image = pygame.transform.rotate(enemy_image, 180)
+            now = pygame.time.get_ticks()
+            if s_shoot and pygame.time.get_ticks() - self.last_shoot >= 1000:
+                self.last_shoot = now
+                bullet = Bullet(self.rect.centerx, self.rect.top, self.direction, 'enemy')
+                all_sprites.add(bullet)
+                bullets_group.add(bullet)
+
 
 
     def update(self):
@@ -664,11 +680,14 @@ def load_level(filename):
     max_width = max(map(len, level_map))
 
     # дополняем каждую строку пустыми клетками ('.')
+    global levell
+    levell = list(map(lambda x: x.ljust(max_width, '.'), level_map))
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
 def generate_level(level):
     new_player, x, y = None, None, None
+    #print(level)
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -686,33 +705,87 @@ def generate_level(level):
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
-def cheak_level(level=2):
+def cheak_level(level):
     if level == 1:
         return generate_level(load_level('map/1.txt'))
     if level == 2:
-        return generate_level(load_level('map/1.txt'))
+        return generate_level(load_level('map/2.txt'))
 
 #lev = load_level('map/1.txt')
+def game_over_lose():
+    save()
+    show = True
+    while show:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
+                    show = False
+        screen.fill((0, 0, 0))
+        print_text('GAME OVER', 90, 25, font_color=(255, 0, 0), font_size=70)
+        print_text(f'Ваши очки: {total_score}', 90, 225, font_color=(255, 0, 0), font_size=50)
+        print_text('Нажмите Enter, чтобы продолжить', 35, 450, font_color=(255, 255, 255), font_size=25)
+        pygame.display.update()
+    pygame.sprite.Group.empty(all_sprites)
+    pygame.sprite.Group.empty(wall_group)
+    pygame.sprite.Group.empty(tiles_group)
+    pygame.sprite.Group.empty(player_group)
+    pygame.sprite.Group.empty(enemy_group)
+    pygame.sprite.Group.empty(bullets_group)
+    pygame.sprite.Group.empty(exp_group)
+    size_menu()
+
+
+def game_over_win():
+    global current_level
+    save()
+    show = True
+    while show:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
+                    show = False
+        screen.fill((0, 0, 0))
+        s = 'Level ' + str(current_level) + ' !!!WIN!!!'
+        print_text(s, 25, 25, font_color=(255, 0, 0), font_size=70)
+        print_text(f'Ваши очки: {total_score}', 10, 300, font_color=(255, 0, 0), font_size=50)
+        print_text('Нажмите Enter, чтобы продолжить', 10, 400, font_color=(255, 0, 0), font_size=25)
+        pygame.display.update()
+    pygame.sprite.Group.empty(all_sprites)
+    pygame.sprite.Group.empty(wall_group)
+    pygame.sprite.Group.empty(tiles_group)
+    pygame.sprite.Group.empty(player_group)
+    pygame.sprite.Group.empty(enemy_group)
+    pygame.sprite.Group.empty(bullets_group)
+    pygame.sprite.Group.empty(exp_group)
+
+    if current_level <= 1:
+        current_level += 1
+    size_menu()
 
 
 def start_game():
     global last, total_score
+    global show_game_over
     pygame.mixer.music.fadeout(200)
     check_sounds()
     pygame.mixer.music.load('data/fon_game.mp3')
     pygame.mixer.music.play(-1)
-    btn_in_menu = Button(80, 40)
-    btn_next_level = Button(80, 40)
     total_score = 0
     move_left = False
     move_right = False
     move_up = False
     move_down = False
     show_game = True
-    # pygame.init()
+    show_game_over = False
     size = width, height = 500, 500
     screen = pygame.display.set_mode(size)
-    player, level_x, level_y = cheak_level(level=1)
+    player, level_x, level_y = cheak_level(current_level)
     screen.fill((250, 250, 250))
     while show_game:
         for event in pygame.event.get():
@@ -761,16 +834,11 @@ def start_game():
         if move_down:
             player.update(0, 2)
         if show_game_over:
-            screen.fill((0, 0, 0))
-            print_text('GAME OVER', 100, 100, font_color=(255, 0, 0))
-            print_text(f'Ваши очки: {total_score}', 100, 300, font_size=20)
-            save()
-            btn_in_menu.draw(300, 400, 'Меню', show_menu, font_size=25)
+            game_over_lose()
+            show_game = False
         elif len(enemy_group) == 0:
-            screen.fill((0, 0, 0))
-            print_text('Level 1 !!!WIN!!!', 100, 100, font_color=(255, 0, 0))
-            print_text(f'Ваши очки: {total_score}', 100, 300, font_size=20)
-            btn_next_level.draw(200, 400, 'Уровень 2', cheak_level, font_size=25)
+            game_over_win()
+            show_game = False
         else:
             enemy_group.update()
             exp_group.update()
@@ -786,9 +854,6 @@ def start_game():
             last = pygame.time.get_ticks()
         pygame.display.flip()
         clock.tick(FPS)
-        #print(len(bullets_group))
-        # pygame.event.pump()
-    # pass
 
 
 def check_sounds():
@@ -911,6 +976,5 @@ check_sounds()
 pygame.mixer.music.load('data/main_menu_music.wav')
 pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(master_volume * music_volume)
-# print(master_volume, music_volume)
 
 main_menu()
