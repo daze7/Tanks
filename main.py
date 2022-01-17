@@ -37,12 +37,13 @@ cheak_login = False
 reg_complete = False
 reg_error = False
 cheak = False
+cheak_bd = True
 blok_game = False
 last = None
 value = None
 player_life = 5
 login_user = ''
-total_score = 0
+total_score = None
 COLOR_INACTIVE = pygame.Color('white')
 COLOR_ACTIVE = pygame.Color('green')
 FONT = pygame.font.Font('data/EE-Bellflower.ttf', 20)
@@ -214,6 +215,10 @@ def score_update():
     elif res > 15000:
         total_score += 50
 
+def last_update():
+    global last
+    last = pygame.time.get_ticks()
+
 def hit_player():
     global player_life, show_game_over
     player_life -= 1
@@ -231,7 +236,7 @@ def show_menu():
 
 def main_menu():
     global show_main_menu, autorization_complete, cheak_login, reg_complete, reg_error, cheak, blok_game, \
-        show_authorization, show_user_statistik, value
+        show_authorization, show_user_statistik, value, cheak_bd
     how_to_play_btn = Button(200, 45)
     start_btn = Button(290, 70)
     settings_btn = Button(255, 70)
@@ -713,6 +718,7 @@ def cheak_level(level):
 
 #lev = load_level('map/1.txt')
 def game_over_lose():
+    global total_score, current_level, cheak_bd
     save()
     show = True
     while show:
@@ -722,6 +728,10 @@ def game_over_lose():
                 quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
+                    total_score = None
+                    cheak_bd = True
+                    if current_level != 1:
+                        current_level -= 1
                     show = False
         screen.fill((0, 0, 0))
         print_text('GAME OVER', 90, 25, font_color=(255, 0, 0), font_size=70)
@@ -739,7 +749,7 @@ def game_over_lose():
 
 
 def game_over_win():
-    global current_level
+    global current_level, cheak_bd
     save()
     show = True
     while show:
@@ -749,6 +759,8 @@ def game_over_win():
                 quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
+                    last_update()
+                    cheak_bd = True
                     show = False
         screen.fill((0, 0, 0))
         s = 'Level ' + str(current_level) + ' !!!WIN!!!'
@@ -776,13 +788,15 @@ def start_game():
     check_sounds()
     pygame.mixer.music.load('data/fon_game.mp3')
     pygame.mixer.music.play(-1)
-    total_score = 0
+    if total_score is None:
+        total_score = 0
     move_left = False
     move_right = False
     move_up = False
     move_down = False
     show_game = True
     show_game_over = False
+    last_update()
     size = width, height = 500, 500
     screen = pygame.display.set_mode(size)
     player, level_x, level_y = cheak_level(current_level)
