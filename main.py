@@ -715,6 +715,8 @@ def cheak_level(level):
         return generate_level(load_level('map/1.txt'))
     if level == 2:
         return generate_level(load_level('map/2.txt'))
+    if level == 3:
+        return generate_level(load_level('map/3.txt'))
 
 #lev = load_level('map/1.txt')
 def game_over_lose():
@@ -728,10 +730,10 @@ def game_over_lose():
                 quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
-                    total_score = None
                     cheak_bd = True
                     if current_level != 1:
                         current_level -= 1
+                    total_score = None
                     show = False
         screen.fill((0, 0, 0))
         print_text('GAME OVER', 90, 25, font_color=(255, 0, 0), font_size=70)
@@ -776,7 +778,7 @@ def game_over_win():
     pygame.sprite.Group.empty(bullets_group)
     pygame.sprite.Group.empty(exp_group)
 
-    if current_level <= 1:
+    if current_level <= 1 or current_level == 2:
         current_level += 1
     size_menu()
 
