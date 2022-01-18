@@ -298,6 +298,7 @@ def update_level_game_from_code():
         f.close()
         bd_cur.execute(f'SELECT * FROM user WHERE id="{id}"')
         value = bd_cur.fetchall()
+        print(value)
         game_level = value[0][3]
     if game_level == 1:
         btn_hard = False
@@ -833,6 +834,7 @@ def game_over_lose():
         print_text(f'Ваши очки: {total_score}', 90, 225, font_color=(255, 0, 0), font_size=50)
         print_text('Нажмите Enter, чтобы продолжить', 35, 450, font_color=(255, 255, 255), font_size=25)
         pygame.display.update()
+    total_score = 0
     pygame.sprite.Group.empty(all_sprites)
     pygame.sprite.Group.empty(wall_group)
     pygame.sprite.Group.empty(tiles_group)
@@ -963,6 +965,7 @@ def start_game():
             bullets_group.draw(screen)
         if not last:
             last = pygame.time.get_ticks()
+        print_text(str(total_score), 435, 0, font_color=(255, 0, 0), font_size=40)
         pygame.display.flip()
         clock.tick(FPS)
 
