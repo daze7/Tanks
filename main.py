@@ -8,13 +8,22 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 
+
 def size_menu():
     global size, width, height, screen
     size = width, height = 800, 700
     screen = pygame.display.set_mode(size)
 
+
+f = open('data/user.txt', 'w')
+f.write('')
+f.close()
+f = open('data/user_login.txt', 'w')
+f.write('')
+f.close()
 levell = []
 current_level = 1
+game_level = 1
 player_x = 0
 player_y = 0
 play = False
@@ -41,11 +50,15 @@ cheak_bd = True
 blok_game = False
 last = None
 value = None
+update_level_game = True
 player_life = 5
 login_user = ''
 total_score = None
 COLOR_INACTIVE = pygame.Color('white')
 COLOR_ACTIVE = pygame.Color('green')
+btn_izi = True
+btn_medium = False
+btn_hard = False
 FONT = pygame.font.Font('data/EE-Bellflower.ttf', 20)
 
 
@@ -124,7 +137,7 @@ class Button(pygame.sprite.Sprite):
 
 
 def sign_in():
-    global play, autorization_complete, cheak_login, cheak, show_authorization, show_user_statistik
+    global play, autorization_complete, cheak_login, cheak, show_authorization, show_user_statistik, update_level_game
     f = open('data/user_login.txt', 'r')
     a = f.readline()
     f.close()
@@ -139,7 +152,9 @@ def sign_in():
             f = open('data/user.txt', 'w')
             f.write(str(value[0][0]))
             f.close()
-            #print_text('Успешная авторизация!', 450, 200, font_size=25)
+            # print_text('Успешная авторизация!', 450, 200, font_size=25)
+            update_level_game = True
+            update_level_game_from_code()
             cheak = True
             autorization_complete = True
             play = True
@@ -147,7 +162,7 @@ def sign_in():
             show_user_statistik = True
 
         else:
-            #print_text('Проверте правильность ввода данных', 350, 200, font_size=25)
+            # print_text('Проверте правильность ввода данных', 350, 200, font_size=25)
             cheak = True
             cheak_login = True
 
@@ -163,32 +178,65 @@ def sign_up():
         cur.execute(f'SELECT * FROM user WHERE login="{a}";')
         value = cur.fetchall()
         if value != []:
-            #print_text('Такой ник уже используется', 420, 200, font_size=25)
+            # print_text('Такой ник уже используется', 420, 200, font_size=25)
             cheak = True
             reg_error = True
         else:
-            cur.execute(f"INSERT INTO user(login,bestscore) VALUES ('{a}', 0)")
-            #print_text('Вы успешно зарегистрированны!', 420, 200, font_size=25)
+            cur.execute(f"INSERT INTO user(login,bestscore,gamelevel) VALUES ('{a}', 0, 1)")
+            # print_text('Вы успешно зарегистрированны!', 420, 200, font_size=25)
             cheak = True
             reg_complete = True
             con.commit()
         cur.close()
         con.close()
 
+
 def blok_start_game():
     global cheak, blok_game
     blok_game = True
     cheak = True
+
 
 def restart_auth():
     global show_authorization, show_user_statistik, blok_game, play
     f = open('data/user_login.txt', 'w')
     f.write('')
     f.close()
+    f = open('data/user.txt', 'w')
+    f.write('')
+    f.close()
     show_user_statistik = False
     blok_game = True
     play = False
     show_authorization = True
+
+
+def game_level_update():
+    bd = sqlite3.connect("data/database/users.db")
+    bd_cur = bd.cursor()
+    f = open('data/user.txt', 'r')
+    id = f.readline()
+    f.close()
+    bd_cur.execute(f'SELECT * FROM user WHERE id="{id}"')
+    value = bd_cur.fetchall()
+    if game_level != value[0][3]:
+        bd_cur.execute(f"UPDATE user \
+                        SET gamelevel = {game_level} \
+                        WHERE id = '{id}'")
+        bd.commit()
+    bd_cur.close()
+    bd.close()
+
+
+def life_update():
+    global player_life
+    if game_level == 1:
+        player_life = 5
+    elif game_level == 2:
+        player_life = 3
+    elif game_level == 3:
+        player_life = 1
+
 
 def save():
     bd = sqlite3.connect("data/database/users.db")
@@ -203,35 +251,83 @@ def save():
                         SET bestscore = {total_score} \
                         WHERE id = '{id}'")
         bd.commit()
+    bd_cur.close()
+    bd.close()
+
 
 def score_update():
     global total_score
     now = pygame.time.get_ticks()
     res = now - last
-    if res < 5000:
-        total_score += 100
-    elif 5000 <= res <= 15000:
-        total_score += 75
-    elif res > 15000:
-        total_score += 50
+    if game_level == 3:
+        if res < 5000:
+            total_score += 100
+        elif 5000 <= res <= 15000:
+            total_score += 75
+        elif res > 15000:
+            total_score += 50
+    elif game_level == 2:
+        if res < 5000:
+            total_score += 75
+        elif 5000 <= res <= 15000:
+            total_score += 50
+        elif res > 15000:
+            total_score += 25
+    elif game_level == 1:
+        if res < 5000:
+            total_score += 50
+        elif 5000 <= res <= 15000:
+            total_score += 25
+        elif res > 15000:
+            total_score += 10
+
 
 def last_update():
     global last
     last = pygame.time.get_ticks()
 
+
+def update_level_game_from_code():
+    global update_level_game, game_level, btn_izi, btn_hard, btn_medium
+    if update_level_game:
+        update_level_game = False
+        bd = sqlite3.connect("data/database/users.db")
+        bd_cur = bd.cursor()
+        f = open('data/user.txt', 'r')
+        id = f.readline()
+        f.close()
+        bd_cur.execute(f'SELECT * FROM user WHERE id="{id}"')
+        value = bd_cur.fetchall()
+        game_level = value[0][3]
+    if game_level == 1:
+        btn_hard = False
+        btn_izi = False
+        btn_izi = True
+    elif game_level == 2:
+        btn_hard = False
+        btn_izi = False
+        btn_medium = True
+    elif game_level == 3:
+        btn_izi = False
+        btn_hard = False
+        btn_hard = True
+
+
 def hit_player():
-    global player_life, show_game_over
+    global player_life
     player_life -= 1
     if player_life <= 0:
-        show_game_over = True
+        return True
+    return False
+
 
 def show_menu():
     global show_game, show_main_menu
     show_game = False
     size_menu()
     show_main_menu = True
-    #screen.fill((0, 0, 0))
-    #show_menu()
+    # screen.fill((0, 0, 0))
+    # show_menu()
 
 
 def main_menu():
@@ -261,7 +357,7 @@ def main_menu():
         screen.blit(main_menu_background, (0, 0))
         if show_authorization:
             cheak_bd = True
-            #pygame.draw.rect(screen, (255, 255, 255), (300, 400, 400, 300), 1)
+            # pygame.draw.rect(screen, (255, 255, 255), (300, 400, 400, 300), 1)
             input_box_login.draw(screen)
             sign_in_btn.draw(445, 435, 'Войти', sign_in, font_size=20)
             sign_up_btn.draw(525, 435, 'Зарегистрироваться', sign_up, font_size=20)
@@ -317,7 +413,6 @@ def main_menu():
         settings_btn.draw(50, 400, 'Настройки', options_menu)
         quit_btn.draw(50, 500, 'Выход', terminate)
         pygame.display.update()
-
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -380,12 +475,12 @@ class Bullet(pygame.sprite.Sprite):
                 if roogi:
                     expl = Explosion(roogi[0].rect.center)
                     self.crash_tank.play()
-                    hit_player()
                     exp_group.add(expl)
                     self.kill()
-                    roogi[0].kill()
-                    global show_game_over
-                    show_game_over = True
+                    if hit_player():
+                        roogi[0].kill()
+                        global show_game_over
+                        show_game_over = True
                 elif self.rect.bottom < 0 or self.rect.bottom > 500 or self.rect.x < 0 or self.rect.x > 500:
                     self.kill()
 
@@ -485,38 +580,36 @@ class Enemy(pygame.sprite.Sprite):
             self.image = pygame.transform.rotate(enemy_image, 90)
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
-
     def possible_directions(self):
         where = []
         x = self.x
         y = self.y - 2
         self.rect = self.image.get_rect().move(x, y)
         g = pygame.sprite.spritecollide(self, enemy_group, False, False)
-        if not(pygame.sprite.spritecollide(self, wall_group, False, False) or y > 450 or \
+        if not (pygame.sprite.spritecollide(self, wall_group, False, False) or y > 450 or \
                 y < 0 or pygame.sprite.spritecollide(self, player_group, False, False) or len(g) > 1):
             where.append('up')
         y = self.y + 2
         self.rect = self.image.get_rect().move(x, y)
         g = pygame.sprite.spritecollide(self, enemy_group, False, False)
-        if not(pygame.sprite.spritecollide(self, wall_group, False, False) or y > 450 or \
+        if not (pygame.sprite.spritecollide(self, wall_group, False, False) or y > 450 or \
                 y < 0 or pygame.sprite.spritecollide(self, player_group, False, False) or len(g) > 1):
             where.append('down')
         y = self.y
         x = self.x + 2
         self.rect = self.image.get_rect().move(x, y)
         g = pygame.sprite.spritecollide(self, enemy_group, False, False)
-        if not(pygame.sprite.spritecollide(self, wall_group, False, False) or x > 450 or \
+        if not (pygame.sprite.spritecollide(self, wall_group, False, False) or x > 450 or \
                 x < 0 or pygame.sprite.spritecollide(self, player_group, False, False) or len(g) > 1):
             where.append('right')
         x = self.x - 2
         self.rect = self.image.get_rect().move(x, y)
         g = pygame.sprite.spritecollide(self, enemy_group, False, False)
-        if not(pygame.sprite.spritecollide(self, wall_group, False, False) or x > 450 or \
+        if not (pygame.sprite.spritecollide(self, wall_group, False, False) or x > 450 or \
                 x < 0 or pygame.sprite.spritecollide(self, player_group, False, False) or len(g) > 1):
             where.append('left')
         self.rect = self.image.get_rect().move(self.x, self.y)
         return where
-
 
     def can_shoot(self):
         x = self.x // 50
@@ -562,8 +655,6 @@ class Enemy(pygame.sprite.Sprite):
                 bullet = Bullet(self.rect.centerx, self.rect.top, self.direction, 'enemy')
                 all_sprites.add(bullet)
                 bullets_group.add(bullet)
-
-
 
     def update(self):
         now = pygame.time.get_ticks()
@@ -692,7 +783,7 @@ def load_level(filename):
 
 def generate_level(level):
     new_player, x, y = None, None, None
-    #print(level)
+    # print(level)
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -710,6 +801,7 @@ def generate_level(level):
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
+
 def cheak_level(level):
     if level == 1:
         return generate_level(load_level('map/1.txt'))
@@ -718,9 +810,10 @@ def cheak_level(level):
     if level == 3:
         return generate_level(load_level('map/3.txt'))
 
-#lev = load_level('map/1.txt')
+
+# lev = load_level('map/1.txt')
 def game_over_lose():
-    global total_score, current_level, cheak_bd
+    global total_score, current_level, cheak_bd, update_level_game
     save()
     show = True
     while show:
@@ -733,7 +826,7 @@ def game_over_lose():
                     cheak_bd = True
                     if current_level != 1:
                         current_level -= 1
-                    total_score = None
+                    life_update()
                     show = False
         screen.fill((0, 0, 0))
         print_text('GAME OVER', 90, 25, font_color=(255, 0, 0), font_size=70)
@@ -747,6 +840,8 @@ def game_over_lose():
     pygame.sprite.Group.empty(enemy_group)
     pygame.sprite.Group.empty(bullets_group)
     pygame.sprite.Group.empty(exp_group)
+    if show is None:
+        total_score = None
     size_menu()
 
 
@@ -811,7 +906,7 @@ def start_game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     player.shoot()
-                    #fair_player.play()
+                    # fair_player.play()
                 if event.key == pygame.K_w or event.key == pygame.K_UP:
                     move_up = True
                     move_down = False
@@ -908,15 +1003,53 @@ def how_to_play():
         print_text(s, 10, 475, (255, 255, 255), 'data/EE-Bellflower.ttf', 33)
         pygame.display.update()
 
+
+def izi_game():
+    global game_level, btn_izi, btn_medium, btn_hard, player_life
+    if show_authorization is False:
+        btn_izi = True
+        btn_medium = False
+        btn_hard = False
+        game_level = 1
+        player_life = 5
+        game_level_update()
+
+
+def medium_game():
+    global game_level, btn_izi, btn_medium, btn_hard, player_life
+    if show_authorization is False:
+        btn_izi = False
+        btn_medium = True
+        btn_hard = False
+        game_level = 2
+        player_life = 3
+        game_level_update()
+
+
+def hard_game():
+    global game_level, btn_izi, btn_medium, btn_hard, player_life
+    if show_authorization is False:
+        btn_izi = False
+        btn_medium = False
+        btn_hard = True
+        game_level = 3
+        player_life = 1
+        game_level_update()
+
+
 def options_menu():
     global show_optoins_menu
     global master_volume
     global sounds_volume
     global music_volume
+    global btn_izi, btn_medium, btn_hard
     show_optoins_menu = True
     options_menu_background = pygame.image.load("data/options_menu_background.png")
     show = True
     back_btn = Button(170, 70)
+    btn_izi_game = Button(90, 40)
+    btn_medium_game = Button(100, 40)
+    btn_hard_game = Button(110, 40)
     slider1 = 500 + (200 * master_volume)
     slider2 = 500 + (200 * sounds_volume)
     slider3 = 500 + (200 * music_volume)
@@ -930,9 +1063,19 @@ def options_menu():
                 quit()
         screen.blit(options_menu_background, (0, 0))
         back_btn.draw(50, 600, 'В меню', main_menu)
+        btn_izi_game.draw(350, 395, 'Легко', izi_game, font_size=25)
+        btn_medium_game.draw(470, 395, 'Средне', medium_game, font_size=25)
+        btn_hard_game.draw(600, 395, 'Сложно', hard_game, font_size=25)
+        if btn_izi:
+            print_text('Легко', 360, 405, (255, 0, 0), font_size=25)
+        if btn_medium:
+            print_text('Средне', 480, 405, (255, 0, 0), font_size=25)
+        if btn_hard:
+            print_text('Сложно', 610, 405, (255, 0, 0), font_size=25)
         print_text('Общая громкость', 50, 100, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
         print_text('Громкость звуков', 50, 200, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
         print_text('Громкость музыки', 50, 300, (255, 255, 255), 'data/EE-Bellflower.ttf', 50)
+        print_text('Сложность игры:', 50, 400, (255, 255, 255), 'data/EE-Bellflower.ttf')
         mouse_pos = pygame.mouse.get_pos()
         if slider_rect1.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] != 0:
             # collision detection also needed here
