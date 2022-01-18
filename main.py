@@ -994,13 +994,13 @@ def how_to_play():
                 show = False
         screen.blit(options_menu_background, (0, 0))
         print_text('Управление', 200, 25, (255, 255, 255), 'data/EE-Bellflower.ttf', 75)
-        s = '1. Для передвиения используйте WASD или Стрелки'
-        print_text(s, 10, 125, (255, 255, 255), 'data/EE-Bellflower.ttf', 33)
+        s = '1. Для передвижения используйте WASD или Стрелки'
+        print_text(s, 10, 125, (255, 255, 255), 'data/EE-Bellflower.ttf', 32)
         s = '2. Нажмите пробел, чтобы стрелять'
-        print_text(s, 10, 225, (255, 255, 255), 'data/EE-Bellflower.ttf', 33)
+        print_text(s, 10, 225, (255, 255, 255), 'data/EE-Bellflower.ttf', 32)
         print_text('Цель игры', 200, 325, (255, 255, 255), 'data/EE-Bellflower.ttf', 75)
         s = 'Уничтожьте вражеские машины как можно скорее'
-        print_text(s, 10, 475, (255, 255, 255), 'data/EE-Bellflower.ttf', 33)
+        print_text(s, 10, 475, (255, 255, 255), 'data/EE-Bellflower.ttf', 32)
         pygame.display.update()
 
 
