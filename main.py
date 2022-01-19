@@ -863,9 +863,9 @@ def game_over_win():
                     show = False
         screen.fill((0, 0, 0))
         s = 'Level ' + str(current_level) + ' !!!WIN!!!'
-        print_text(s, 25, 25, font_color=(255, 0, 0), font_size=70)
-        print_text(f'Ваши очки: {total_score}', 10, 300, font_color=(255, 0, 0), font_size=50)
-        print_text('Нажмите Enter, чтобы продолжить', 10, 400, font_color=(255, 0, 0), font_size=25)
+        print_text(s, 25, 25, font_color=(255, 255, 255), font_size=70)
+        print_text(f'Ваши очки: {total_score}', 10, 200, font_color=(255, 255, 255), font_size=50)
+        print_text('Нажмите Enter, чтобы продолжить', 10, 400, font_color=(255, 255, 255), font_size=25)
         pygame.display.update()
     pygame.sprite.Group.empty(all_sprites)
     pygame.sprite.Group.empty(wall_group)
