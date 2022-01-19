@@ -3,6 +3,7 @@ import random
 import pygame
 import os
 import sys
+from deletee import delete_all
 
 
 def size_menu():
@@ -11,6 +12,7 @@ def size_menu():
     screen = pygame.display.set_mode(size)
 
 
+last, value, total_score, screen = None, None, None, None
 f = open('data/user.txt', 'w')
 f.write('')
 f.close()
@@ -18,13 +20,10 @@ f = open('data/user_login.txt', 'w')
 f.write('')
 f.close()
 levell = []
-current_level = 1
-game_level = 1
-player_x, player_y = 0, 0
+game_level, current_level, player_x, player_y = 1, 1, 0, 0
 play = False
 pygame.init()
 size = width, height = 0, 0
-screen = None
 size_menu()
 pygame.display.set_caption('Танчики')
 FPS = 60
@@ -41,21 +40,12 @@ cheak_login = False
 reg_complete = False
 reg_error = False
 cheak = False
-cheak_bd = True
 blok_game = False
-last = None
-value = None
-update_level_game = True
-player_life = 5
+update_level_game, cheak_bd = True, True
+player_life, current_score = 5, 0
 login_user = ''
-total_score = None
-COLOR_INACTIVE = pygame.Color('white')
-COLOR_ACTIVE = pygame.Color('green')
-btn_izi = True
-btn_medium = False
-btn_hard = False
-current_score = 0
-game_continue = False
+COLOR_INACTIVE, COLOR_ACTIVE = pygame.Color('white'), pygame.Color('green')
+btn_izi, btn_medium, btn_hard, game_continue = True, False, False, False
 FONT = pygame.font.Font('data/EE-Bellflower.ttf', 20)
 
 
@@ -329,10 +319,56 @@ def show_menu():
     show_main_menu = True
 
 
+def show_stat():
+    con = sqlite3.connect('data/database/users.db')
+    cur = con.cursor()
+    query = 'SELECT bestscore, login from user'
+    res = cur.execute(query).fetchall()
+    con.close()
+    if res:
+        res.sort(reverse=True)
+        leng = 7
+        if len(res) < 7:
+            leng = len(res)
+        stat_menu_background = pygame.image.load("data/options_menu_background.png")
+        show = True
+        while show:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    terminate()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE or event.key == pygame.K_ESCAPE:
+                        show = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    show = False
+            screen.blit(stat_menu_background, (0, 0))
+            for i in range(leng):
+                s = str(i + 1) + '. ' + str(res[i][1]) + ' ' + str(res[i][0])
+                print_text(s, 10, 10 + (100 * i), font_color=(255, 255, 255), font_size=60)
+            pygame.display.update()
+    else:
+        stat_menu_background = pygame.image.load("data/options_menu_background.png")
+        show = True
+        while show:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    terminate()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE or event.key == pygame.K_ESCAPE:
+                        show = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    show = False
+            screen.blit(stat_menu_background, (0, 0))
+            print_text('База данных пуста', 100, 10, font_color=(255, 0, 0), font_size=70)
+            pygame.display.update()
+
+
 def main_menu():
     global show_main_menu, autorization_complete, cheak_login, reg_complete, reg_error, cheak, blok_game, \
         show_authorization, show_user_statistik, value, cheak_bd, game_continue
     how_to_play_btn = Button(200, 45)
+    stat_reset_btn = Button(222, 45)
+    stat_btn = Button(300, 45)
     start_btn = Button(290, 70)
     settings_btn = Button(255, 70)
     quit_btn = Button(160, 70)
@@ -407,6 +443,8 @@ def main_menu():
         else:
             start_btn.draw(50, 300, 'Начать игру', blok_start_game)
         how_to_play_btn.draw(600, 655, 'Как играть?', how_to_play, 33)
+        stat_reset_btn.draw(378, 655, 'Сброс данных', delete_all, 33)
+        stat_btn.draw(78, 655, 'Таблица рекордов', show_stat, 33)
         settings_btn.draw(50, 400, 'Настройки', options_menu)
         quit_btn.draw(50, 500, 'Выход', terminate)
         if game_continue:
