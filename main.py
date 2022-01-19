@@ -1,12 +1,8 @@
 import sqlite3
-import time
 import random
 import pygame
-import sys
 import os
-import tkinter as tk
-from tkinter import *
-from tkinter import ttk
+import sys
 
 
 def size_menu():
@@ -24,8 +20,7 @@ f.close()
 levell = []
 current_level = 1
 game_level = 1
-player_x = 0
-player_y = 0
+player_x, player_y = 0, 0
 play = False
 pygame.init()
 size = width, height = 0, 0
@@ -89,7 +84,6 @@ def print_text(message, x, y, font_color=(255, 255, 255), font_type='data/EE-Bel
     screen.blit(text, (x, y))
 
 
-# группы спрайтов
 all_sprites = pygame.sprite.Group()
 wall_group = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
@@ -154,7 +148,6 @@ def sign_in():
             f = open('data/user.txt', 'w')
             f.write(str(value[0][0]))
             f.close()
-            # print_text('Успешная авторизация!', 450, 200, font_size=25)
             update_level_game = True
             update_level_game_from_code()
             cheak = True
@@ -164,7 +157,6 @@ def sign_in():
             show_user_statistik = True
 
         else:
-            # print_text('Проверте правильность ввода данных', 350, 200, font_size=25)
             cheak = True
             cheak_login = True
 
@@ -180,12 +172,10 @@ def sign_up():
         cur.execute(f'SELECT * FROM user WHERE login="{a}";')
         value = cur.fetchall()
         if value != []:
-            # print_text('Такой ник уже используется', 420, 200, font_size=25)
             cheak = True
             reg_error = True
         else:
             cur.execute(f"INSERT INTO user(login,bestscore,gamelevel) VALUES ('{a}', 0, 1)")
-            # print_text('Вы успешно зарегистрированны!', 420, 200, font_size=25)
             cheak = True
             reg_complete = True
             con.commit()
@@ -337,8 +327,6 @@ def show_menu():
     show_game = False
     size_menu()
     show_main_menu = True
-    # screen.fill((0, 0, 0))
-    # show_menu()
 
 
 def main_menu():
@@ -367,7 +355,6 @@ def main_menu():
         screen.blit(main_menu_background, (0, 0))
         if show_authorization:
             cheak_bd = True
-            # pygame.draw.rect(screen, (255, 255, 255), (300, 400, 400, 300), 1)
             input_box_login.draw(screen)
             sign_in_btn.draw(445, 435, 'Войти', sign_in, font_size=20)
             sign_up_btn.draw(525, 435, 'Зарегистрироваться', sign_up, font_size=20)
@@ -780,14 +767,9 @@ class InputBox:
 
 def load_level(filename):
     filename = "data/" + filename
-    # читаем уровень, убирая символы перевода строки
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
-
-    # и подсчитываем максимальную длину
     max_width = max(map(len, level_map))
-
-    # дополняем каждую строку пустыми клетками ('.')
     global levell
     levell = list(map(lambda x: x.ljust(max_width, '.'), level_map))
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
@@ -795,7 +777,6 @@ def load_level(filename):
 
 def generate_level(level):
     new_player, x, y = None, None, None
-    # print(level)
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -809,8 +790,6 @@ def generate_level(level):
             elif level[y][x] == '!':
                 Tile(x, y)
                 new_enemy = Enemy(x, y, 'down')
-
-    # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
 
@@ -823,7 +802,6 @@ def cheak_level(level):
         return generate_level(load_level('map/3.txt'))
 
 
-# lev = load_level('map/1.txt')
 def game_over_lose():
     global total_score, current_level, cheak_bd, update_level_game, current_score, game_continue
     save()
@@ -893,7 +871,6 @@ def game_over_win():
     current_score = 0
     if current_level <= 1 or current_level == 2:
         current_level += 1
-    size_menu()
 
 
 def start_game():
@@ -1100,7 +1077,6 @@ def options_menu():
         print_text('Сложность игры:', 50, 400, (255, 255, 255), 'data/EE-Bellflower.ttf')
         mouse_pos = pygame.mouse.get_pos()
         if slider_rect1.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] != 0:
-            # collision detection also needed here
             slider1 = pygame.mouse.get_pos()[0] - 10
             if slider1 < 500:
                 slider1 = 500
@@ -1115,7 +1091,6 @@ def options_menu():
             f.close()
             pygame.mixer.music.set_volume(master_volume * music_volume)
         if slider_rect2.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] != 0:
-            # collision detection also needed here
             slider2 = pygame.mouse.get_pos()[0] - 10
             if slider2 < 500:
                 slider2 = 500
@@ -1129,7 +1104,6 @@ def options_menu():
             f.write('music_volume=' + str(music_volume) + '\n')
             f.close()
         if slider_rect3.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] != 0:
-            # collision detection also needed here
             slider3 = pygame.mouse.get_pos()[0] - 10
             if slider3 < 500:
                 slider3 = 500
