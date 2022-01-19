@@ -4,6 +4,8 @@ import pygame
 import os
 import sys
 from deletee import delete_all
+from file_save import save
+from file_level_updated import game_level_update
 
 
 def size_menu():
@@ -193,23 +195,6 @@ def restart_auth():
     show_authorization = True
 
 
-def game_level_update():
-    bd = sqlite3.connect("data/database/users.db")
-    bd_cur = bd.cursor()
-    f = open('data/user.txt', 'r')
-    id = f.readline()
-    f.close()
-    bd_cur.execute(f'SELECT * FROM user WHERE id="{id}"')
-    value = bd_cur.fetchall()
-    if game_level != value[0][3]:
-        bd_cur.execute(f"UPDATE user \
-                        SET gamelevel = {game_level} \
-                        WHERE id = '{id}'")
-        bd.commit()
-    bd_cur.close()
-    bd.close()
-
-
 def life_update():
     global player_life
     if game_level == 1:
@@ -218,24 +203,6 @@ def life_update():
         player_life = 3
     elif game_level == 3:
         player_life = 1
-
-
-def save():
-    bd = sqlite3.connect("data/database/users.db")
-    bd_cur = bd.cursor()
-    f = open('data/user.txt', 'r')
-    id = f.readline()
-    f.close()
-    bd_cur.execute(f'SELECT * FROM user WHERE id="{id}"')
-    value = bd_cur.fetchall()
-    if total_score > value[0][2]:
-        bd_cur.execute(f"UPDATE user \
-                        SET bestscore = {total_score} \
-                        WHERE id = '{id}'")
-        bd.commit()
-    bd_cur.close()
-    bd.close()
-
 
 def score_update():
     global total_score, current_score
@@ -437,6 +404,7 @@ def main_menu():
                 reg_complete = False
                 reg_error = False
                 last = None
+        print(game_level)
         print_text('Танчики', 50, 100, (255, 255, 255), 'data/EE-Bellflower.ttf', 100)
         if play:
             start_btn.draw(50, 300, 'Начать игру', start_game)
@@ -842,7 +810,7 @@ def cheak_level(level):
 
 def game_over_lose():
     global total_score, current_level, cheak_bd, update_level_game, current_score, game_continue
-    save()
+    save(total_score)
     show = True
     while show:
         for event in pygame.event.get():
@@ -881,7 +849,7 @@ def game_over_lose():
 
 def game_over_win():
     global current_level, cheak_bd, current_score, game_continue
-    save()
+    save(total_score)
     game_continue = True
     show = True
     while show:
