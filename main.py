@@ -59,6 +59,7 @@ COLOR_ACTIVE = pygame.Color('green')
 btn_izi = True
 btn_medium = False
 btn_hard = False
+current_score = 0
 FONT = pygame.font.Font('data/EE-Bellflower.ttf', 20)
 
 
@@ -256,30 +257,39 @@ def save():
 
 
 def score_update():
-    global total_score
+    global total_score, current_score
     now = pygame.time.get_ticks()
     res = now - last
     if game_level == 3:
         if res < 5000:
             total_score += 100
+            current_score += 100
         elif 5000 <= res <= 15000:
             total_score += 75
+            current_score += 75
         elif res > 15000:
             total_score += 50
+            current_score += 50
     elif game_level == 2:
         if res < 5000:
             total_score += 75
+            current_score += 75
         elif 5000 <= res <= 15000:
             total_score += 50
+            current_score += 50
         elif res > 15000:
             total_score += 25
+            current_score += 25
     elif game_level == 1:
         if res < 5000:
             total_score += 50
+            current_score += 50
         elif 5000 <= res <= 15000:
             total_score += 25
+            current_score += 25
         elif res > 15000:
             total_score += 10
+            current_score += 10
 
 
 def last_update():
@@ -813,7 +823,7 @@ def cheak_level(level):
 
 # lev = load_level('map/1.txt')
 def game_over_lose():
-    global total_score, current_level, cheak_bd, update_level_game
+    global total_score, current_level, cheak_bd, update_level_game, current_score
     save()
     show = True
     while show:
@@ -840,13 +850,19 @@ def game_over_lose():
     pygame.sprite.Group.empty(enemy_group)
     pygame.sprite.Group.empty(bullets_group)
     pygame.sprite.Group.empty(exp_group)
+    if current_level == 1:
+        total_score = 0
+        current_score = 0
+    else:
+        total_score -= current_score
+        current_score = 0
     if show is None:
         total_score = None
     size_menu()
 
 
 def game_over_win():
-    global current_level, cheak_bd
+    global current_level, cheak_bd, current_score
     save()
     show = True
     while show:
@@ -872,7 +888,7 @@ def game_over_win():
     pygame.sprite.Group.empty(enemy_group)
     pygame.sprite.Group.empty(bullets_group)
     pygame.sprite.Group.empty(exp_group)
-
+    current_score = 0
     if current_level <= 1 or current_level == 2:
         current_level += 1
     size_menu()
@@ -963,6 +979,8 @@ def start_game():
             bullets_group.draw(screen)
         if not last:
             last = pygame.time.get_ticks()
+        if show_game:
+            print_text(str(total_score), 435, 0, font_color=(255, 0, 0), font_size=40)
         pygame.display.flip()
         clock.tick(FPS)
 
