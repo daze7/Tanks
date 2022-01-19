@@ -1044,7 +1044,7 @@ def options_menu():
     show_optoins_menu = True
     options_menu_background = pygame.image.load("data/options_menu_background.png")
     show = True
-    back_btn = Button(170, 70)
+    back_btn = Button(170, 60)
     btn_izi_game = Button(90, 40)
     btn_medium_game = Button(100, 40)
     btn_hard_game = Button(110, 40)
@@ -1059,7 +1059,7 @@ def options_menu():
             if event.type == pygame.QUIT:
                 terminate()
         screen.blit(options_menu_background, (0, 0))
-        back_btn.draw(50, 600, 'В меню', main_menu)
+        back_btn.draw(50, 570, 'В меню', main_menu)
         btn_izi_game.draw(350, 395, 'Легко', izi_game, font_size=25)
         btn_medium_game.draw(470, 395, 'Средне', medium_game, font_size=25)
         btn_hard_game.draw(600, 395, 'Сложно', hard_game, font_size=25)
