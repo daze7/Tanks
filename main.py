@@ -361,8 +361,7 @@ def main_menu():
     while show_main_menu:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+                terminate()
             input_box_login.handle_event(event)
         input_box_login.update()
         screen.blit(main_menu_background, (0, 0))
@@ -832,8 +831,7 @@ def game_over_lose():
     while show:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+                terminate()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
                     cheak_bd = True
@@ -873,8 +871,7 @@ def game_over_win():
     while show:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+                terminate()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
                     last_update()
@@ -922,8 +919,7 @@ def start_game():
     while show_game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+                terminate()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     player.shoot()
@@ -1013,8 +1009,7 @@ def how_to_play():
     while show:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+                terminate()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE or event.key == pygame.K_ESCAPE:
                     show = False
@@ -1087,8 +1082,7 @@ def options_menu():
     while show_optoins_menu:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+                terminate()
         screen.blit(options_menu_background, (0, 0))
         back_btn.draw(50, 600, 'В меню', main_menu)
         btn_izi_game.draw(350, 395, 'Легко', izi_game, font_size=25)
