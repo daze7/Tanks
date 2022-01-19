@@ -60,6 +60,7 @@ btn_izi = True
 btn_medium = False
 btn_hard = False
 current_score = 0
+game_continue = False
 FONT = pygame.font.Font('data/EE-Bellflower.ttf', 20)
 
 
@@ -342,7 +343,7 @@ def show_menu():
 
 def main_menu():
     global show_main_menu, autorization_complete, cheak_login, reg_complete, reg_error, cheak, blok_game, \
-        show_authorization, show_user_statistik, value, cheak_bd
+        show_authorization, show_user_statistik, value, cheak_bd, game_continue
     how_to_play_btn = Button(200, 45)
     start_btn = Button(290, 70)
     settings_btn = Button(255, 70)
@@ -422,6 +423,8 @@ def main_menu():
         how_to_play_btn.draw(600, 655, 'Как играть?', how_to_play, 33)
         settings_btn.draw(50, 400, 'Настройки', options_menu)
         quit_btn.draw(50, 500, 'Выход', terminate)
+        if game_continue:
+            start_game()
         pygame.display.update()
 
 
@@ -823,7 +826,7 @@ def cheak_level(level):
 
 # lev = load_level('map/1.txt')
 def game_over_lose():
-    global total_score, current_level, cheak_bd, update_level_game, current_score
+    global total_score, current_level, cheak_bd, update_level_game, current_score, game_continue
     save()
     show = True
     while show:
@@ -836,6 +839,7 @@ def game_over_lose():
                     cheak_bd = True
                     if current_level != 1:
                         current_level -= 1
+                    game_continue = False
                     life_update()
                     show = False
         screen.fill((0, 0, 0))
@@ -862,8 +866,9 @@ def game_over_lose():
 
 
 def game_over_win():
-    global current_level, cheak_bd, current_score
+    global current_level, cheak_bd, current_score, game_continue
     save()
+    game_continue = True
     show = True
     while show:
         for event in pygame.event.get():
@@ -910,7 +915,7 @@ def start_game():
     show_game = True
     show_game_over = False
     last_update()
-    size = width, height = 500, 500
+    size = width, height = 500, 540
     screen = pygame.display.set_mode(size)
     player, level_x, level_y = cheak_level(current_level)
     screen.fill((250, 250, 250))
@@ -979,8 +984,13 @@ def start_game():
             bullets_group.draw(screen)
         if not last:
             last = pygame.time.get_ticks()
-        if show_game:
-            print_text(str(total_score), 435, 0, font_color=(255, 0, 0), font_size=40)
+        print_text(str(total_score), 410, 500, font_color=(255, 255, 255), font_size=40)
+        print_text('Очки:', 310, 500, (255, 255, 255), 'data/EE-Bellflower.ttf', 40)
+        print_text('Броня:', 0, 500, (255, 255, 255), 'data/EE-Bellflower.ttf', 40)
+        col = (255, 255, 255)
+        if player_life == 1:
+            col = (255, 0, 0)
+        print_text(str(player_life - 1), 130, 500, font_color=col, font_size=40)
         pygame.display.flip()
         clock.tick(FPS)
 
