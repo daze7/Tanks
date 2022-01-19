@@ -1010,7 +1010,7 @@ def izi_game():
         btn_hard = False
         game_level = 1
         player_life = 5
-        game_level_update()
+        game_level_update(game_level)
 
 
 def medium_game():
@@ -1021,7 +1021,7 @@ def medium_game():
         btn_hard = False
         game_level = 2
         player_life = 3
-        game_level_update()
+        game_level_update(game_level)
 
 
 def hard_game():
@@ -1032,7 +1032,7 @@ def hard_game():
         btn_hard = True
         game_level = 3
         player_life = 1
-        game_level_update()
+        game_level_update(game_level)
 
 
 def options_menu():
