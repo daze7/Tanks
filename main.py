@@ -894,7 +894,7 @@ def start_game():
     show_game = True
     show_game_over = False
     last_update()
-    size = width, height = 500, 500
+    size = width, height = 500, 540
     screen = pygame.display.set_mode(size)
     player, level_x, level_y = cheak_level(current_level)
     screen.fill((250, 250, 250))
@@ -963,6 +963,13 @@ def start_game():
             bullets_group.draw(screen)
         if not last:
             last = pygame.time.get_ticks()
+        print_text(str(total_score), 410, 500, font_color=(255, 255, 255), font_size=40)
+        print_text('Очки:', 310, 500, (255, 255, 255), 'data/EE-Bellflower.ttf', 40)
+        print_text('Броня:', 0, 500, (255, 255, 255), 'data/EE-Bellflower.ttf', 40)
+        col = (255, 255, 255)
+        if player_life == 1:
+            col = (255, 0, 0)
+        print_text(str(player_life - 1), 130, 500, font_color=col, font_size=40)
         pygame.display.flip()
         clock.tick(FPS)
 
