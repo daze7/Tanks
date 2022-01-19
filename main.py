@@ -62,7 +62,6 @@ def terminate():
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
-    # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
         sys.exit()
@@ -83,7 +82,6 @@ player_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 bullets_group = pygame.sprite.Group()
 exp_group = pygame.sprite.Group()
-
 wall_images = load_image('texture/map/Tilemap/wall1.png')
 tile_images = load_image('texture/map/Tilemap/sand1.png')
 player_image = load_image('texture/tanks/player.png')
@@ -103,7 +101,6 @@ tile_width = tile_height = 50
 
 class Button(pygame.sprite.Sprite):
     global show_main_menu
-
     def __init__(self, w, h):
         self.w = w
         self.h = h
@@ -147,7 +144,6 @@ def sign_in():
             play = True
             show_authorization = False
             show_user_statistik = True
-
         else:
             cheak = True
             cheak_login = True
@@ -203,6 +199,7 @@ def life_update():
         player_life = 3
     elif game_level == 3:
         player_life = 1
+
 
 def score_update():
     global total_score, current_score
@@ -404,7 +401,6 @@ def main_menu():
                 reg_complete = False
                 reg_error = False
                 last = None
-        print(game_level)
         print_text('Танчики', 50, 100, (255, 255, 255), 'data/EE-Bellflower.ttf', 100)
         if play:
             start_btn.draw(50, 300, 'Начать игру', start_game)
@@ -457,7 +453,6 @@ class Bullet(pygame.sprite.Sprite):
             self.rect.x -= self.speedy
         if self.direction == 'left':
             self.rect.x += self.speedy
-        # убить, если он заходит за верхнюю часть экрана
         if self.type == 'player':
             if pygame.sprite.spritecollide(self, wall_group, False, False):
                 self.kill()
@@ -529,7 +524,6 @@ class Player(pygame.sprite.Sprite):
     def update(self, pos_x, pos_y):
         global player_x
         global player_y
-        # print(self.x, self.y)
         x = (self.x + pos_x) // 50
         y = (self.y + pos_y) // 50
         self.x += pos_x
@@ -792,7 +786,6 @@ def generate_level(level):
             elif level[y][x] == '@':
                 Tile(x, y)
                 new_player = Player(x, y, 'up')
-                # print(x, y)
             elif level[y][x] == '!':
                 Tile(x, y)
                 new_enemy = Enemy(x, y, 'down')
@@ -906,7 +899,6 @@ def start_game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     player.shoot()
-                    # fair_player.play()
                 if event.key == pygame.K_w or event.key == pygame.K_UP:
                     move_up = True
                     move_down = False
@@ -1132,10 +1124,8 @@ def options_menu():
         pygame.display.update()
 
 
-# game_start
 check_sounds()
 pygame.mixer.music.load('data/main_menu_music.wav')
 pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(master_volume * music_volume)
-
 main_menu()
