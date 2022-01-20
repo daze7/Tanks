@@ -799,6 +799,12 @@ def cheak_level(level):
         return generate_level(load_level('map/2.txt'))
     if level == 3:
         return generate_level(load_level('map/3.txt'))
+    if level == 4:
+        return generate_level(load_level('map/4.txt'))
+    if level == 5:
+        return generate_level(load_level('map/5.txt'))
+    if level == 6:
+        return generate_level(load_level('map/6.txt'))
 
 
 def game_over_lose():
@@ -868,7 +874,8 @@ def game_over_win():
     pygame.sprite.Group.empty(bullets_group)
     pygame.sprite.Group.empty(exp_group)
     current_score = 0
-    if current_level <= 1 or current_level == 2:
+    if current_level <= 1 or current_level == 2 or current_level == 3 or current_level == 4 or \
+            current_level == 5 or current_level == 6:
         current_level += 1
 
 
